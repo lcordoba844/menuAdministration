@@ -1,0 +1,23 @@
+{
+  "name": "menuadministration",
+  "version": "1.0.0",
+  "description": "This package will list the requirements to the menuAdministration project.",
+  "homepage": "https://github.com/lcordoba844/menuAdministration#readme",
+  "bugs": {
+    "url": "https://github.com/lcordoba844/menuAdministration/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lcordoba844/menuAdministration.git"
+  },
+  "license": "ISC",
+  "author": "lucas cordoba",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
