@@ -1,0 +1,23 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "nodemon",
+      "runtimeArgs": [
+        "--exec",
+        "node --inspect -r ts-node/register -r tsconfig-paths/register"
+      ],
+      "program": "${workspaceFolder}/src/server.ts",
+      "restart": true,
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "console": "internalConsole",
+      "outputCapture": "std",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ]
+}

@@ -1,10 +1,9 @@
 import { Table, Column, Model, DataType, CreatedAt, UpdatedAt, ForeignKey, BelongsTo } from 'sequelize-typescript';
-import Menu from './Menu';
-import User from './User';
-import MenuOption from './MenuOption';
+import Menu from './menu.model';
+import User from './user.model';
+import MenuOption from './menu_option.model';
 import { BelongsToMany } from 'sequelize-typescript';
-import DietaryRestriction from './DietaryRestriction';
-import OrderDietaryRestriction from './OrderDietaryRestriction';
+import DietaryRestriction from './dietary_restriction.model';
 
 export enum OrderTargetKind {
     SELF = 'self',
@@ -36,6 +35,14 @@ export default class Order extends Model {
         field: 'menu_id'
     })
     menuId!: string;
+
+    @ForeignKey(() => MenuOption)
+    @Column({
+        type: DataType.UUID,
+        allowNull: true,
+        field: 'menu_option_number'
+    })
+    menuOptionNumber?: number;
 
     @BelongsTo(() => Menu)
     menu!: Menu;
@@ -84,19 +91,12 @@ export default class Order extends Model {
     decisionKind!: DecisionKind;
 
     @Column({
-        type: DataType.INTEGER,
-        allowNull: true,
-        field: 'menu_option_number'
-    })
-    menuOptionNumber?: number;
-
-    @Column({
         type: DataType.TEXT,
         allowNull: true,
     })
     comment?: string;
-
-   @BelongsToMany(() => DietaryRestriction, () => OrderDietaryRestriction)
+    
+    @BelongsToMany(() => DietaryRestriction, () => OrderDietaryRestriction)
     dietaryRestrictions!: DietaryRestriction[];
 
     @Column({
@@ -113,4 +113,15 @@ export default class Order extends Model {
     @UpdatedAt
     @Column({ field: 'updated_at' })
     declare updatedAt: Date;
+}
+
+@Table
+class OrderDietaryRestriction extends Model {
+    @ForeignKey(() => Order)
+    @Column
+    orderId!: number;
+
+    @ForeignKey(() => DietaryRestriction)
+    @Column
+    dietaryRestrictionId!: number;
 }

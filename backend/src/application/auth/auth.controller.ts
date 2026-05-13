@@ -1,71 +1,34 @@
-import { type Request, type Response } from 'express';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import User from '../../models/User';
+import { Body, JsonController, Post } from 'routing-controllers';
+import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi';
+import { Service } from 'typedi';
 
-export const register = async (req: Request, res: Response): Promise<void> => {
-    const { username, password } = req.body;
+import {
+  LoginRequest,
+  LoginResponse,
+  RegisterRequest,
+  RegisterResponse,
+} from '@/application/auth/auth.dto';
+import { AuthService } from '@/application/auth/auth.service';
 
-    try {
-        const existingUser = await User.findOne({ where: { username } });
-        if (existingUser) {
-            res.status(400).json({ status: 'error', message: 'Username already in use' });
-            return;
-        }
+@JsonController('/auth')
+@Service()
+export class AuthController {
+  constructor(private readonly authService: AuthService) {}
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+  @Post('/login')
+  @OpenAPI({ summary: 'Authenticate user and retrieve a JWT' })
+  @ResponseSchema(LoginResponse)
+  public async login(@Body() request: LoginRequest): Promise<LoginResponse> {
+    const jwt = await this.authService.login(request);
+    return { jwt };
+  }
 
-        const newUser = await User.create({
-            username,
-            password: hashedPassword
-        });
-
-        res.status(201).json({
-            status: 'success',
-            message: 'User registered successfully',
-            data: { id: newUser.id, username: newUser.username }
-        });
-    } catch (error) {
-        console.error('Registration error:', error);
-        res.status(500).json({ status: 'error', message: 'Internal Server Error' });
-    }
-};
-
-export const login = async (req: Request, res: Response): Promise<void> => {
-    const { username, password } = req.body;
-
-    try {
-        const user = await User.findOne({ where: { username } });
-        
-        if (!user) {
-            res.status(401).json({ status: 'error', message: 'Invalid credentials' });
-            return;
-        }
-
-        const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-        if (!isPasswordValid) {
-            res.status(401).json({ status: 'error', message: 'Invalid credentials' });
-            return;
-        }
-
-        const payload = {
-            id: user.id,
-            email: user.username,
-        };
-
-        const secret = process.env.JWT_SECRET;
-        if (!secret) throw new Error("JWT_SECRET is missing");
-
-        const token = jwt.sign(payload, secret, { expiresIn: '24h' });
-
-        res.status(200).json({
-            status: 'success',
-            message: 'Login successful',
-            token: token,
-            user: payload
-        });
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ status: 'error', message: 'Internal Server Error' });
-    }
-};
+  @Post('/register')
+  @OpenAPI({ summary: 'Create a new user account' })
+  @ResponseSchema(RegisterResponse)
+  public async register(
+    @Body() request: RegisterRequest
+  ): Promise<RegisterResponse> {
+    return await this.authService.createAccount(request);
+  }
+}
