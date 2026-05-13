@@ -1,6 +1,5 @@
-// src/models/Menu.ts
 import { Table, Column, Model, DataType, CreatedAt, UpdatedAt, HasMany } from 'sequelize-typescript';
-import MenuOption from './MenuOption';
+import MenuOption from './menu_option.model';
 
 @Table({
     tableName: 'menus',

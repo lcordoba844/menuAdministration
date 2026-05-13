@@ -1,6 +1,6 @@
 // src/models/MenuOption.ts
 import { Table, Column, Model, DataType, CreatedAt, UpdatedAt, ForeignKey, BelongsTo, PrimaryKey } from 'sequelize-typescript';
-import Menu from './Menu';
+import Menu from './menu.model';
 
 @Table({
     tableName: 'menu_options',
@@ -8,7 +8,6 @@ import Menu from './Menu';
 })
 export default class MenuOption extends Model {
     
-    @PrimaryKey
     @ForeignKey(() => Menu)
     @Column({
         type: DataType.UUID,
@@ -19,7 +18,7 @@ export default class MenuOption extends Model {
 
     @PrimaryKey
     @Column({
-        type: DataType.INTEGER,
+        type: DataType.UUID,
         allowNull: false,
         field: 'option_number'
     })
