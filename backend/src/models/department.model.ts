@@ -1,10 +1,11 @@
 import { Table, Column, Model, DataType, CreatedAt, UpdatedAt } from 'sequelize-typescript';
 
 @Table({
-    tableName: 'offices',
+    tableName: 'departments',
     timestamps: true,
 })
-export default class Office extends Model {
+
+export default class Department extends Model {
     @Column({
         type: DataType.UUID,
         defaultValue: DataType.UUIDV4,
@@ -20,32 +21,14 @@ export default class Office extends Model {
 
     @Column({
         type: DataType.STRING,
-        allowNull: false,
+        allowNull: true,
     })
-    city!: string;
-
-    @Column({
-        type: DataType.STRING,
-        allowNull: false,
-    })
-    country!: string;
-
-    @Column({
-        type: DataType.FLOAT,
-        allowNull: false,
-    })
-    latitude!: number;
-
-    @Column({
-        type: DataType.FLOAT,
-        allowNull: false,
-    })
-    longitude!: number;
+    description?: string;
 
     @Column({
         type: DataType.BOOLEAN,
-        defaultValue: true,
-        field: 'is_active', 
+        allowNull: false,
+        field: 'is_active'
     })
     isActive!: boolean;
 
@@ -56,4 +39,5 @@ export default class Office extends Model {
     @UpdatedAt
     @Column({ field: 'updated_at' })
     declare updatedAt: Date;
+
 }
