@@ -76,7 +76,7 @@ export class App {
           title: 'Menu Administración',
           version: '1.0.0',
         },
-      }
+      },
     );
   }
 

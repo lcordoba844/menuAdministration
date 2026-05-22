@@ -1,14 +1,15 @@
 import {
   IsBoolean,
-  IsOptional,
-  Length,
-  IsString,
-  IsNotEmpty,
+  IsDate,
   IsLatitude,
-  IsLongitude
+  IsLongitude,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Length,
 } from 'class-validator';
 
-export class GetOfficeQueryDto {
+export class GetOfficeQuery {
   @IsOptional()
   @IsString()
   @Length(1, 100)
@@ -33,7 +34,7 @@ export class GetOfficeQueryDto {
   longitude?: number;
 }
 
-export class CreateOfficeDto {
+export class CreateOfficeRequest {
   @IsNotEmpty()
   @IsString()
   @Length(1, 100)
@@ -52,7 +53,7 @@ export class CreateOfficeDto {
   @IsNotEmpty()
   @IsLatitude()
   latitude!: number;
-    
+
   @IsNotEmpty()
   @IsLongitude()
   longitude!: number;
@@ -62,7 +63,7 @@ export class CreateOfficeDto {
   isActive?: boolean;
 }
 
-export class UpdateOfficeDto {
+export class UpdateOfficeRequest {
   @IsOptional()
   @IsString()
   @Length(1, 100)
@@ -91,14 +92,31 @@ export class UpdateOfficeDto {
   isActive?: boolean;
 }
 
-export interface OfficeResponseDto {
-  id: string;
-  name: string;
-  city: string;
-  country: string;
-  latitude: number;
-  longitude: number;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+export class OfficeResponse {
+  @IsString()
+  id!: string;
+
+  @IsString()
+  name!: string;
+
+  @IsString()
+  city!: string;
+
+  @IsString()
+  country!: string;
+
+  @IsLatitude()
+  latitude!: number;
+
+  @IsLongitude()
+  longitude!: number;
+
+  @IsBoolean()
+  isActive!: boolean;
+
+  @IsDate()
+  createdAt!: Date;
+
+  @IsDate()
+  updatedAt!: Date;
 }

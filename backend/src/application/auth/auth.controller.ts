@@ -27,7 +27,7 @@ export class AuthController {
   @OpenAPI({ summary: 'Create a new user account' })
   @ResponseSchema(RegisterResponse)
   public async register(
-    @Body() request: RegisterRequest
+    @Body() request: RegisterRequest,
   ): Promise<RegisterResponse> {
     return await this.authService.createAccount(request);
   }
