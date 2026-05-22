@@ -1,0 +1,17 @@
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always"
+  },
+  "eslint.useFlatConfig": true,
+  "eslint.workingDirectories": [
+    {
+      "directory": "backend",
+      "changeProcessCWD": true
+    }
+  ],
+  "prettier.requireConfig": true,
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}
