@@ -20,7 +20,7 @@ export class AuthService {
 
     const isPasswordValid = await bcrypt.compare(
       request.password,
-      user.password
+      user.password,
     );
     if (!isPasswordValid) {
       throw new Error('Invalid credentials');
@@ -37,7 +37,7 @@ export class AuthService {
   }
 
   public async createAccount(
-    request: RegisterRequest
+    request: RegisterRequest,
   ): Promise<RegisterResponse> {
     const existingUser = await User.findOne({
       where: { email: request.email },

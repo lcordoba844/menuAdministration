@@ -14,7 +14,7 @@ export function requestLogger() {
     res.on('finish', () => {
       const duration = Date.now() - start;
       logger.debug(
-        `${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`
+        `${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`,
       );
     });
 
