@@ -1,18 +1,13 @@
 {
-  // TypeScript settings
-  "typescript.preferences.quoteStyle": "double",
-  "typescript.suggest.autoImports": true,
-  "typescript.updateImportsOnFileMove.enabled": "always",
-  "typescript.preferences.importModuleSpecifier": "non-relative",
-  "typescript.format.insertSpaceAfterOpeningAndBeforeClosingEmptyBraces": false,
-
   // Editor settings
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "always",
     "source.organizeImports": "always"
   },
-  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
   "editor.tabSize": 2,
   "editor.insertSpaces": true,
   "editor.detectIndentation": false,

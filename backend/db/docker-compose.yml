@@ -1,14 +1,14 @@
 services:
   db:
     image: postgres:15
-    container_name: trading-platform-db
+    container_name: menu-administration-db
     restart: always
     environment:
       POSTGRES_USER: traderman
       POSTGRES_PASSWORD: trade1234
-      POSTGRES_DB: trading-platform
+      POSTGRES_DB: menu-administration
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - db_data:/var/lib/postgresql/data
 

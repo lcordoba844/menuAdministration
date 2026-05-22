@@ -29,22 +29,16 @@ export default tseslint.config(
     },
 
     rules: {
-      // Enforce single quotes
-      quotes: ['error', 'single'],
-
-      // Enforce semicolons
-      semi: ['error', 'always'],
-
       // TypeScript specific rules
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
-          args: "all",
-          argsIgnorePattern: "^_",
-          caughtErrors: "all",
-          caughtErrorsIgnorePattern: "^_",
-          destructuredArrayIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
+          args: 'all',
+          argsIgnorePattern: '^_',
+          caughtErrors: 'all',
+          caughtErrorsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
           ignoreRestSiblings: true,
         },
       ],
@@ -85,11 +79,11 @@ export default tseslint.config(
           'newlines-between': 'always',
         },
       ],
-      "no-restricted-imports": "off",
-      "@typescript-eslint/no-restricted-imports": [
-        "error",
+      'no-restricted-imports': 'off',
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
         {
-          patterns: ["./*", "../*"],
+          patterns: ['./*', '../*'],
         },
       ],
     },

@@ -18,7 +18,7 @@ export class LoggerService {
         winston.format.timestamp(),
         winston.format.printf(({ timestamp, level, message }) => {
           return `[${String(timestamp)}] ${level.toUpperCase()}: ${JSON.stringify(message)}`;
-        })
+        }),
       ),
       transports,
     });

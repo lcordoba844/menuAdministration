@@ -1,87 +1,62 @@
-import { error } from "node:console";
+import {
+  Body,
+  Delete,
+  Get,
+  HttpCode,
+  JsonController,
+  Param,
+  Post,
+  Put,
+  UseBefore,
+} from 'routing-controllers';
+import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi';
+import { Service } from 'typedi';
 
-import { type Request, type Response } from "express";
+import {
+  CreateOfficeRequest,
+  OfficeResponse,
+  UpdateOfficeRequest,
+} from '@/application/office/office.dto';
+import { OfficeService } from '@/application/office/office.service';
+import { requireAuth } from '@/middlewares/auth.middleware';
 
-import { OfficeService } from "./office.services";
+@JsonController('/offices')
+@UseBefore(requireAuth)
+@Service()
 export class OfficeController {
-  private officeService = new OfficeService();
+  constructor(private readonly officeService: OfficeService) {}
 
-  public getOffices = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const offices = await this.officeService.getAllOffices();
+  @Get()
+  @OpenAPI({ summary: 'Get all offices' })
+  @ResponseSchema(OfficeResponse, { isArray: true })
+  public async getOffices(): Promise<OfficeResponse[]> {
+    return await this.officeService.getAllOffices();
+  }
 
-      res.status(200).json({
-        status: "success",
-        data: offices,
-      });
-    } catch (error) {
-      console.error("Error fetching offices:", error);
-      res
-        .status(500)
-        .json({ status: "error", message: "Internal Server Error" });
-    }
-  };
+  @Post()
+  @HttpCode(201)
+  @OpenAPI({ summary: 'Create a new office' })
+  @ResponseSchema(OfficeResponse)
+  public async createOffice(
+    @Body() request: CreateOfficeRequest,
+  ): Promise<OfficeResponse> {
+    return await this.officeService.createOffice(request);
+  }
 
-  public createOffice = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const newOffice = await this.officeService.createOffice(req.body);
+  @Put('/:id')
+  @OpenAPI({ summary: 'Update an office' })
+  @ResponseSchema(OfficeResponse)
+  public async updateOffice(
+    @Param('id') id: string,
+    @Body() request: UpdateOfficeRequest,
+  ): Promise<OfficeResponse> {
+    return await this.officeService.updateOffice(id, request);
+  }
 
-      res.status(201).json({
-        status: "success",
-        data: newOffice,
-      });
-    } catch (error) {
-      console.error("Error creating office:", error);
-      res
-        .status(500)
-        .json({ status: "error", message: "Internal Server Error" });
-    }
-  };
-
-  public updateOffice = async (
-    req: Request<{ id: string }>,
-    res: Response,
-  ): Promise<void> => {
-    try {
-      const { id } = req.params;
-
-      const updatedOffice = await this.officeService.updateOffice(id, req.body);
-
-      res.status(200).json({
-        status: "success",
-        data: updatedOffice,
-      });
-    } catch (error: any) {
-      if (error.message === "OFFICE_NOT_FOUND") {
-        res.status(404).json({ status: "error", message: "Office not found" });
-        return;
-      }
-      console.error("Error updating office:", error);
-      res
-        .status(500)
-        .json({ status: "error", message: "Internal Server Error" });
-    }
-  };
-
-  public deleteOffice = async (
-    req: Request<{ id: string }>,
-    res: Response,
-  ): Promise<void> => {
-    try {
-      const { id } = req.params;
-
-      await this.officeService.deleteOffice(id);
-
-      res.status(204).send();
-    } catch (error: any) {
-      if (error.message === "OFFICE_NOT_FOUND") {
-        res.status(404).json({ status: "error", message: "Office not found" });
-        return;
-      }
-      console.error("Error deleting office:", error);
-      res
-        .status(500)
-        .json({ status: "error", message: "Internal Server Error" });
-    }
-  };
+  @Delete('/:id')
+  @HttpCode(204)
+  @OpenAPI({ summary: 'Delete an office' })
+  public async deleteOffice(@Param('id') id: string): Promise<void> {
+    await this.officeService.deleteOffice(id);
+  }
 }

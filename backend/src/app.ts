@@ -76,7 +76,7 @@ export class App {
           title: 'Trading Platform',
           version: '1.0.0',
         },
-      }
+      },
     );
   }
 
