@@ -7,7 +7,10 @@ import {
   PrimaryKey,
   Table,
   UpdatedAt,
+  BelongsToMany,
 } from 'sequelize-typescript';
+
+import DietaryRestriction from '@/models/dietary_restriction.model';
 
 enum UserRole {
   user = 'USER',
@@ -91,6 +94,13 @@ export default class User extends Model {
     },
   })
   createdBy?: string;
+
+  @BelongsToMany(() => DietaryRestriction, {
+    through: 'user_dietary_preferences',
+    foreignKey: 'userId',
+    otherKey: 'dietaryRestrictionId',
+  })
+  dietaryPreferences!: DietaryRestriction[];
 
   @CreatedAt
   createdAt!: Date;
