@@ -18,7 +18,7 @@ enum UserRole {
   tableName: 'users',
   timestamps: true,
 })
-export class User extends Model {
+export default class User extends Model {
   @PrimaryKey
   @Column({
     type: DataType.UUID,

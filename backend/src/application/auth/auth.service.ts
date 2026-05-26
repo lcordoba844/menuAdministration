@@ -8,7 +8,7 @@ import {
   RegisterResponse,
 } from '@/application/auth/auth.dto';
 import { environment } from '@/config/environment';
-import { User } from '@/models/user.model';
+import User from '@/models/user.model';
 
 @Service()
 export class AuthService {
