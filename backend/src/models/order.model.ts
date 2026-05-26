@@ -13,7 +13,7 @@ import {
 import DietaryRestriction from '@/models/dietary_restriction.model';
 import Menu from '@/models/menu.model';
 import MenuOption from '@/models/menu_option.model';
-import { User } from '@/models/user.model';
+import User from '@/models/user.model';
 
 export enum OrderTargetKind {
   SELF = 'self',
