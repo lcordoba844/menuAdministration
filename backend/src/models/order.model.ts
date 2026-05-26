@@ -7,8 +7,8 @@ import {
   UpdatedAt,
   ForeignKey,
   BelongsTo,
+  BelongsToMany,
 } from 'sequelize-typescript';
-import { BelongsToMany } from 'sequelize-typescript';
 
 import DietaryRestriction from '@/models/dietary_restriction.model';
 import Menu from '@/models/menu.model';
@@ -106,7 +106,11 @@ export default class Order extends Model {
   })
   comment?: string;
 
-  @BelongsToMany(() => DietaryRestriction, () => OrderDietaryRestriction)
+  @BelongsToMany(() => DietaryRestriction, {
+    through: 'order_dietary_restrictions',
+    foreignKey: 'orderId',
+    otherKey: 'dietaryRestrictionId',
+  })
   dietaryRestrictions!: DietaryRestriction[];
 
   @Column({
@@ -123,15 +127,4 @@ export default class Order extends Model {
   @UpdatedAt
   @Column({ field: 'updated_at' })
   declare updatedAt: Date;
-}
-
-@Table
-class OrderDietaryRestriction extends Model {
-  @ForeignKey(() => Order)
-  @Column
-  orderId!: number;
-
-  @ForeignKey(() => DietaryRestriction)
-  @Column
-  dietaryRestrictionId!: number;
 }
