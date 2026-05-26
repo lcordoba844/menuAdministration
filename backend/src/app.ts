@@ -88,6 +88,9 @@ export class App {
     try {
       await sequelize.authenticate();
       logger.info('Database connection established successfully');
+
+      await sequelize.sync({ alter: true });
+      logger.info('Database tables synchronized successfully');
     } catch (error) {
       if (error instanceof Error) {
         logger.error(`Unable to connect to the database: ${error}`);
