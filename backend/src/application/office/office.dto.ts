@@ -1,8 +1,6 @@
 import {
   IsBoolean,
   IsDate,
-  IsLatitude,
-  IsLongitude,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -26,12 +24,9 @@ export class GetOfficeQuery {
   country?: string;
 
   @IsOptional()
-  @IsLatitude()
-  latitude?: number;
-
-  @IsOptional()
-  @IsLongitude()
-  longitude?: number;
+  @IsString()
+  @Length(1, 255)
+  address?: string;
 }
 
 export class CreateOfficeRequest {
@@ -51,12 +46,9 @@ export class CreateOfficeRequest {
   country!: string;
 
   @IsNotEmpty()
-  @IsLatitude()
-  latitude!: number;
-
-  @IsNotEmpty()
-  @IsLongitude()
-  longitude!: number;
+  @IsString()
+  @Length(1, 255)
+  address!: string;
 
   @IsOptional()
   @IsBoolean()
@@ -80,12 +72,9 @@ export class UpdateOfficeRequest {
   country?: string;
 
   @IsOptional()
-  @IsLatitude()
-  latitude?: number;
-
-  @IsOptional()
-  @IsLongitude()
-  longitude?: number;
+  @IsString()
+  @Length(1, 255)
+  address?: string;
 
   @IsOptional()
   @IsBoolean()
@@ -105,11 +94,8 @@ export class OfficeResponse {
   @IsString()
   country!: string;
 
-  @IsLatitude()
-  latitude!: number;
-
-  @IsLongitude()
-  longitude!: number;
+  @IsString()
+  address!: string;
 
   @IsBoolean()
   isActive!: boolean;

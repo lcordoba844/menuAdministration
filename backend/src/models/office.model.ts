@@ -38,16 +38,10 @@ export default class Office extends Model {
   country!: string;
 
   @Column({
-    type: DataType.FLOAT,
+    type: DataType.STRING,
     allowNull: false,
   })
-  latitude!: number;
-
-  @Column({
-    type: DataType.FLOAT,
-    allowNull: false,
-  })
-  longitude!: number;
+  address!: string;
 
   @Column({
     type: DataType.BOOLEAN,
