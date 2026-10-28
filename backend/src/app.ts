@@ -71,6 +71,15 @@ export class App {
       {
         components: {
           schemas,
+          securitySchemes: {
+            bearerAuth: {
+              type: 'http',
+              scheme: 'bearer',
+              bearerFormat: 'JWT',
+              description:
+                'Log in with POST /api/auth/login, then paste the returned jwt here without the Bearer prefix.',
+            },
+          },
         },
         info: {
           title: 'Menu Administración',
