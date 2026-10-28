@@ -7,7 +7,6 @@ import {
   Param,
   Post,
   Put,
-  UseBefore,
 } from 'routing-controllers';
 import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi';
 import { Service } from 'typedi';
@@ -18,10 +17,10 @@ import {
   UpdateOfficeRequest,
 } from '@/application/office/office.dto';
 import { OfficeService } from '@/application/office/office.service';
-import { requireAuth } from '@/middlewares/auth.middleware';
+import { Authenticated } from '@/middlewares/authenticated.decorator';
 
 @JsonController('/offices')
-@UseBefore(requireAuth)
+@Authenticated()
 @Service()
 export class OfficeController {
   constructor(private readonly officeService: OfficeService) {}
