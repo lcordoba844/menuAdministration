@@ -3,7 +3,12 @@ import * as jwt from 'jsonwebtoken';
 import { UseBefore } from 'routing-controllers';
 import { OpenAPI } from 'routing-controllers-openapi';
 
+import { AuthPayload } from '@/application/auth/auth.dto';
 import { environment } from '@/config/environment';
+
+export interface AuthenticatedRequest extends Request {
+  auth: AuthPayload;
+}
 
 function requireAuth(req: Request, res: Response, next: NextFunction): void {
   const authorization = req.header('authorization');
@@ -17,7 +22,11 @@ function requireAuth(req: Request, res: Response, next: NextFunction): void {
   }
 
   try {
-    jwt.verify(token, environment.jwtSecret);
+    const payload = jwt.verify(token, environment.jwtSecret) as AuthPayload;
+    (req as AuthenticatedRequest).auth = {
+      userId: payload.userId,
+      role: payload.role,
+    };
     next();
   } catch {
     res.status(401).json({ status: 'error', message: 'Unauthorized' });
