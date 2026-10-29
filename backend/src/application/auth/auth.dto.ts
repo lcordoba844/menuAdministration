@@ -1,4 +1,12 @@
 import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { JwtPayload } from 'jsonwebtoken';
+
+import type { UserRole } from '@/models/user.model';
+
+export interface AuthPayload extends JwtPayload {
+  userId: string;
+  role: UserRole;
+}
 
 export class LoginRequest {
   @IsEmail()

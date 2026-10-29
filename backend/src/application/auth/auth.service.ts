@@ -3,6 +3,7 @@ import * as jwt from 'jsonwebtoken';
 import { Service } from 'typedi';
 
 import {
+  AuthPayload,
   LoginRequest,
   RegisterRequest,
   RegisterResponse,
@@ -26,11 +27,13 @@ export class AuthService {
       throw new Error('Invalid credentials');
     }
 
-    return this.generateToken(user.id, user.email);
+    return this.generateToken({
+      userId: user.id,
+      role: user.role,
+    });
   }
 
-  private generateToken(userId: string, email: string): string {
-    const payload = { userId, email };
+  private generateToken(payload: AuthPayload): string {
     const secret = environment.jwtSecret;
 
     return jwt.sign(payload, secret, { expiresIn: '24h' });

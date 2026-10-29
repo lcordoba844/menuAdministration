@@ -12,7 +12,7 @@ import {
 
 import DietaryRestriction from '@/models/dietary_restriction.model';
 
-enum UserRole {
+export enum UserRole {
   user = 'USER',
   admin = 'ADMIN',
 }
