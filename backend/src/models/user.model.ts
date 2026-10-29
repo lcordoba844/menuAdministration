@@ -3,14 +3,14 @@ import {
   Column,
   CreatedAt,
   DataType,
+  HasOne,
   Model,
   PrimaryKey,
   Table,
   UpdatedAt,
-  BelongsToMany,
 } from 'sequelize-typescript';
 
-import DietaryRestriction from '@/models/dietary_restriction.model';
+import Diner from '@/models/diner.model';
 
 export enum UserRole {
   user = 'USER',
@@ -63,19 +63,6 @@ export default class User extends Model {
   role!: UserRole;
 
   @Column({
-    type: DataType.UUID,
-    allowNull: true,
-    field: 'limit_id',
-    validate: {
-      isUUID: {
-        args: 4,
-        msg: 'limitId must be a valid UUID',
-      },
-    },
-  })
-  limitId?: string;
-
-  @Column({
     type: DataType.BOOLEAN,
     allowNull: false,
     defaultValue: true,
@@ -95,12 +82,8 @@ export default class User extends Model {
   })
   createdBy?: string;
 
-  @BelongsToMany(() => DietaryRestriction, {
-    through: 'user_dietary_preferences',
-    foreignKey: 'userId',
-    otherKey: 'dietaryRestrictionId',
-  })
-  dietaryPreferences!: DietaryRestriction[];
+  @HasOne(() => Diner)
+  diner!: Diner | null;
 
   @CreatedAt
   createdAt!: Date;
