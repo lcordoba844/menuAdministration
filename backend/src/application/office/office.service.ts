@@ -12,6 +12,7 @@ import Office from '@/models/office.model';
 export class OfficeService {
   public async getAllOffices(): Promise<OfficeResponse[]> {
     const offices = await Office.findAll({
+      where: { enabled: true },
       order: [['createdAt', 'DESC']],
     });
 
@@ -21,7 +22,13 @@ export class OfficeService {
   public async createOffice(
     request: CreateOfficeRequest,
   ): Promise<OfficeResponse> {
-    const office = await Office.create({ ...request });
+    const office = await Office.create({
+      name: request.name,
+      city: request.city,
+      country: request.country,
+      address: request.address,
+      enabled: true,
+    });
 
     return this.toResponse(office);
   }
@@ -31,7 +38,12 @@ export class OfficeService {
     request: UpdateOfficeRequest,
   ): Promise<OfficeResponse> {
     const office = await this.findOffice(id);
-    const updatedOffice = await office.update(request);
+    const updatedOffice = await office.update({
+      name: request.name,
+      city: request.city,
+      country: request.country,
+      address: request.address,
+    });
 
     return this.toResponse(updatedOffice);
   }
@@ -39,11 +51,13 @@ export class OfficeService {
   public async deleteOffice(id: string): Promise<void> {
     const office = await this.findOffice(id);
 
-    await office.destroy();
+    await office.update({ enabled: false });
   }
 
   private async findOffice(id: string): Promise<Office> {
-    const office = await Office.findByPk(id);
+    const office = await Office.findOne({
+      where: { id, enabled: true },
+    });
     if (!office) {
       throw new NotFoundError('Office not found');
     }
@@ -58,7 +72,7 @@ export class OfficeService {
       city: office.city,
       country: office.country,
       address: office.address,
-      isActive: office.isActive,
+      enabled: office.enabled,
       createdAt: office.createdAt,
       updatedAt: office.updatedAt,
     };
