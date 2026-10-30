@@ -1,4 +1,4 @@
-import { ClipboardList, House, UtensilsCrossed } from 'lucide-react'
+import { Building2, ClipboardList, House, UtensilsCrossed } from 'lucide-react'
 import { NavLink, Route, Routes } from 'react-router'
 
 function Placeholder({ title, description }: { title: string; description: string }) {
@@ -24,6 +24,9 @@ function App() {
         <Route path="/orders" element={
           <Placeholder title="Orders" description="Meal orders are coming soon." />
         } />
+        <Route path="/departments" element={
+          <Placeholder title="Departments" description="Department management is coming soon." />
+        } />
         <Route path="*" element={
           <Placeholder title="Page not found" description="Use the links below to find your way back." />
         } />
@@ -41,6 +44,10 @@ function App() {
         <NavLink to="/orders" className={({ isActive }) => `btn ${isActive ? 'btn-primary' : 'btn-outline'}`}>
           <ClipboardList size={18} aria-hidden="true" />
           Orders
+        </NavLink>
+        <NavLink to="/departments" className={({ isActive }) => `btn ${isActive ? 'btn-primary' : 'btn-outline'}`}>
+          <Building2 size={18} aria-hidden="true" />
+          Departments
         </NavLink>
       </nav>
     </main>
