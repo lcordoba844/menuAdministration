@@ -7,28 +7,6 @@ import {
   Length,
 } from 'class-validator';
 
-export class GetOfficeQuery {
-  @IsOptional()
-  @IsString()
-  @Length(1, 100)
-  name?: string;
-
-  @IsOptional()
-  @IsString()
-  @Length(1, 100)
-  city?: string;
-
-  @IsOptional()
-  @IsString()
-  @Length(1, 100)
-  country?: string;
-
-  @IsOptional()
-  @IsString()
-  @Length(1, 255)
-  address?: string;
-}
-
 export class CreateOfficeRequest {
   @IsNotEmpty()
   @IsString()
@@ -49,10 +27,6 @@ export class CreateOfficeRequest {
   @IsString()
   @Length(1, 255)
   address!: string;
-
-  @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
 }
 
 export class UpdateOfficeRequest {
@@ -75,10 +49,6 @@ export class UpdateOfficeRequest {
   @IsString()
   @Length(1, 255)
   address?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
 }
 
 export class OfficeResponse {
@@ -98,7 +68,7 @@ export class OfficeResponse {
   address!: string;
 
   @IsBoolean()
-  isActive!: boolean;
+  enabled!: boolean;
 
   @IsDate()
   createdAt!: Date;

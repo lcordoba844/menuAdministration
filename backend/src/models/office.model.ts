@@ -45,10 +45,10 @@ export default class Office extends Model {
 
   @Column({
     type: DataType.BOOLEAN,
+    allowNull: false,
     defaultValue: true,
-    field: 'is_active',
   })
-  isActive!: boolean;
+  enabled!: boolean;
 
   @CreatedAt
   @Column({ field: 'created_at' })
