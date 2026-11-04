@@ -29,14 +29,14 @@ export default class Department extends Model {
     type: DataType.STRING,
     allowNull: true,
   })
-  description?: string;
+  description?: string | null;
 
   @Column({
     type: DataType.BOOLEAN,
     allowNull: false,
-    field: 'is_active',
+    defaultValue: true,
   })
-  isActive!: boolean;
+  enabled!: boolean;
 
   @CreatedAt
   @Column({ field: 'created_at' })
