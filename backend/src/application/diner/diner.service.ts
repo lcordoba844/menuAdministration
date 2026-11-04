@@ -7,7 +7,9 @@ import {
   DinerResponse,
 } from '@/application/diner/diner.dto';
 import { sequelize } from '@/config/sequelize';
+import Department from '@/models/department.model';
 import Diner from '@/models/diner.model';
+import Office from '@/models/office.model';
 
 @Service()
 export class DinerService {
@@ -17,6 +19,28 @@ export class DinerService {
   ): Promise<DinerResponse> {
     try {
       return await sequelize.transaction(async (transaction) => {
+        const office = await Office.findOne({
+          where: { id: request.officeId, enabled: true },
+          transaction,
+          lock: transaction.LOCK.SHARE,
+        });
+        if (!office) {
+          throw new BadRequestError(
+            'Office does not exist or has been deleted',
+          );
+        }
+
+        const department = await Department.findOne({
+          where: { id: request.departmentId, enabled: true },
+          transaction,
+          lock: transaction.LOCK.SHARE,
+        });
+        if (!department) {
+          throw new BadRequestError(
+            'Department does not exist or has been deleted',
+          );
+        }
+
         const diner = await Diner.create(
           {
             userId,
