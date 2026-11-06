@@ -16,7 +16,7 @@ import Office from '@/models/office.model';
 export class DinerService {
   public async getDiner(userId: string): Promise<DinerResponse> {
     const diner = await Diner.findOne({
-      where: { userId },
+      where: { userId, enabled: true },
       include: [
         {
           association: 'dietaryRestrictions',
@@ -50,6 +50,7 @@ export class DinerService {
             name: request.name,
             officeId: request.officeId,
             departmentId: request.departmentId,
+            enabled: true,
           },
           { transaction },
         );
@@ -80,12 +81,7 @@ export class DinerService {
     request: UpdateDinerRequest,
   ): Promise<DinerResponse> {
     try {
-      const diner = await Diner.findOne({
-        where: { userId },
-      });
-      if (!diner) {
-        throw new NotFoundError('Diner not found');
-      }
+      const diner = await this.findDiner(userId);
 
       if (request.officeId !== undefined) {
         await this.validateOffice(request.officeId);
@@ -130,6 +126,23 @@ export class DinerService {
     }
   }
 
+  public async deleteDiner(userId: string): Promise<void> {
+    const diner = await this.findDiner(userId);
+
+    await diner.update({ enabled: false });
+  }
+
+  private async findDiner(userId: string): Promise<Diner> {
+    const diner = await Diner.findOne({
+      where: { userId, enabled: true },
+    });
+    if (!diner) {
+      throw new NotFoundError('Diner not found');
+    }
+
+    return diner;
+  }
+
   private async validateOffice(officeId: string): Promise<void> {
     const office = await Office.findOne({
       where: { id: officeId, enabled: true },
@@ -161,6 +174,7 @@ export class DinerService {
       officeId: diner.officeId,
       departmentId: diner.departmentId,
       dietaryRestrictionIds,
+      enabled: diner.enabled,
       createdAt: diner.createdAt,
       updatedAt: diner.updatedAt,
     };

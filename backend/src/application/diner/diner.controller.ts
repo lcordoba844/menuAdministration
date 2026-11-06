@@ -1,5 +1,6 @@
 import {
   Body,
+  Delete,
   Get,
   HttpCode,
   JsonController,
@@ -55,5 +56,14 @@ export class DinerController {
     @Body() body: UpdateDinerRequest,
   ): Promise<DinerResponse> {
     return await this.dinerService.updateDiner(request.auth.userId, body);
+  }
+
+  @Delete('/me')
+  @HttpCode(204)
+  @OpenAPI({ summary: 'Delete the diner profile for the authenticated user' })
+  public async deleteDiner(
+    @Req() request: AuthenticatedRequest,
+  ): Promise<void> {
+    await this.dinerService.deleteDiner(request.auth.userId);
   }
 }

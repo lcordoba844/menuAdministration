@@ -1,5 +1,6 @@
 import {
   IsArray,
+  IsBoolean,
   IsDate,
   IsNotEmpty,
   IsOptional,
@@ -74,6 +75,9 @@ export class DinerResponse {
   @IsArray()
   @IsUUID(4, { each: true })
   dietaryRestrictionIds!: string[];
+
+  @IsBoolean()
+  enabled!: boolean;
 
   @IsDate()
   createdAt!: Date;
