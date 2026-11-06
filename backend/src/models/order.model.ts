@@ -50,9 +50,12 @@ export default class Order extends Model {
   @Column({
     type: DataType.UUID,
     allowNull: true,
-    field: 'menu_option_number',
+    field: 'menu_option_id',
   })
-  menuOptionNumber?: number;
+  menuOptionId?: string | null;
+
+  @BelongsTo(() => MenuOption)
+  menuOption?: MenuOption | null;
 
   @BelongsTo(() => Menu)
   menu!: Menu;
@@ -65,7 +68,7 @@ export default class Order extends Model {
   })
   placedByUserId!: string;
 
-  @BelongsTo(() => User, 'placed_by_user_id')
+  @BelongsTo(() => User, 'placedByUserId')
   placedBy!: User;
 
   @ForeignKey(() => User)
@@ -74,10 +77,10 @@ export default class Order extends Model {
     allowNull: true,
     field: 'target_user_id',
   })
-  targetUserId?: string;
+  targetUserId?: string | null;
 
-  @BelongsTo(() => User, 'target_user_id')
-  targetUser?: User;
+  @BelongsTo(() => User, 'targetUserId')
+  targetUser?: User | null;
 
   @Column({
     type: DataType.ENUM(...Object.values(OrderTargetKind)),
@@ -91,7 +94,7 @@ export default class Order extends Model {
     allowNull: true,
     field: 'target_guest_name',
   })
-  targetGuestName?: string;
+  targetGuestName?: string | null;
 
   @Column({
     type: DataType.ENUM(...Object.values(DecisionKind)),
@@ -104,7 +107,7 @@ export default class Order extends Model {
     type: DataType.TEXT,
     allowNull: true,
   })
-  comment?: string;
+  comment?: string | null;
 
   @BelongsToMany(() => DietaryRestriction, {
     through: 'order_dietary_restrictions',
@@ -118,7 +121,14 @@ export default class Order extends Model {
     allowNull: true,
     field: 'locked_at',
   })
-  lockedAt?: Date;
+  lockedAt?: Date | null;
+
+  @Column({
+    type: DataType.BOOLEAN,
+    allowNull: false,
+    defaultValue: true,
+  })
+  enabled!: boolean;
 
   @CreatedAt
   @Column({ field: 'created_at' })
