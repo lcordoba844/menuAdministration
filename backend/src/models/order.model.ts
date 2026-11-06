@@ -50,9 +50,12 @@ export default class Order extends Model {
   @Column({
     type: DataType.UUID,
     allowNull: true,
-    field: 'menu_option_number',
+    field: 'menu_option_id',
   })
-  menuOptionNumber?: number;
+  menuOptionId?: string | null;
+
+  @BelongsTo(() => MenuOption)
+  menuOption?: MenuOption | null;
 
   @BelongsTo(() => Menu)
   menu!: Menu;

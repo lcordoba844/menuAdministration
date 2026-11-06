@@ -6,9 +6,12 @@ import {
   CreatedAt,
   UpdatedAt,
   HasMany,
+  ForeignKey,
+  BelongsTo,
 } from 'sequelize-typescript';
 
 import MenuOption from '@/models/menu_option.model';
+import User from '@/models/user.model';
 
 @Table({
   tableName: 'menus',
@@ -23,6 +26,12 @@ export default class Menu extends Model {
   declare id: string;
 
   @Column({
+    type: DataType.DATEONLY,
+    allowNull: false,
+  })
+  date!: string;
+
+  @Column({
     type: DataType.STRING,
     allowNull: false,
   })
@@ -31,6 +40,7 @@ export default class Menu extends Model {
   @Column({
     type: DataType.STRING,
     allowNull: false,
+    defaultValue: '',
   })
   description!: string;
 
@@ -44,23 +54,20 @@ export default class Menu extends Model {
   @Column({
     type: DataType.BOOLEAN,
     allowNull: false,
-    field: 'is_active',
+    defaultValue: true,
   })
-  isActive!: boolean;
+  enabled!: boolean;
 
-  @Column({
-    type: DataType.DATE,
-    allowNull: true,
-    field: 'archived_at',
-  })
-  archivedAt?: Date;
-
+  @ForeignKey(() => User)
   @Column({
     type: DataType.UUID,
     allowNull: false,
     field: 'created_by_user_id',
   })
   createdByUserId!: string;
+
+  @BelongsTo(() => User)
+  createdByUser!: User;
 
   @HasMany(() => MenuOption)
   options!: MenuOption[];
