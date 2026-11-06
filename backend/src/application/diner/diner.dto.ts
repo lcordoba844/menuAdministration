@@ -1,11 +1,13 @@
 import {
   IsArray,
+  IsBoolean,
   IsDate,
   IsNotEmpty,
   IsOptional,
   IsString,
   IsUUID,
   Length,
+  ValidateIf,
 } from 'class-validator';
 
 export class CreateDinerRequest {
@@ -21,6 +23,34 @@ export class CreateDinerRequest {
   departmentId!: string;
 
   @IsOptional()
+  @IsArray()
+  @IsUUID(4, { each: true })
+  dietaryRestrictionIds?: string[];
+}
+
+export class UpdateDinerRequest {
+  @ValidateIf(
+    (_request: unknown, value: unknown): boolean => value !== undefined,
+  )
+  @IsString()
+  @Length(1, 255)
+  name?: string;
+
+  @ValidateIf(
+    (_request: unknown, value: unknown): boolean => value !== undefined,
+  )
+  @IsUUID(4)
+  officeId?: string;
+
+  @ValidateIf(
+    (_request: unknown, value: unknown): boolean => value !== undefined,
+  )
+  @IsUUID(4)
+  departmentId?: string;
+
+  @ValidateIf(
+    (_request: unknown, value: unknown): boolean => value !== undefined,
+  )
   @IsArray()
   @IsUUID(4, { each: true })
   dietaryRestrictionIds?: string[];
@@ -45,6 +75,9 @@ export class DinerResponse {
   @IsArray()
   @IsUUID(4, { each: true })
   dietaryRestrictionIds!: string[];
+
+  @IsBoolean()
+  enabled!: boolean;
 
   @IsDate()
   createdAt!: Date;
