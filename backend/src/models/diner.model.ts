@@ -75,6 +75,13 @@ export default class Diner extends Model {
   })
   dietaryRestrictions!: DietaryRestriction[];
 
+  @Column({
+    type: DataType.BOOLEAN,
+    allowNull: false,
+    defaultValue: true,
+  })
+  enabled!: boolean;
+
   @CreatedAt
   createdAt!: Date;
 
