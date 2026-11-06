@@ -8,7 +8,6 @@ import {
   UpdatedAt,
   ForeignKey,
   BelongsTo,
-  PrimaryKey,
 } from 'sequelize-typescript';
 
 import Menu from '@/models/menu.model';
@@ -18,6 +17,13 @@ import Menu from '@/models/menu.model';
   timestamps: true,
 })
 export default class MenuOption extends Model {
+  @Column({
+    type: DataType.UUID,
+    defaultValue: DataType.UUIDV4,
+    primaryKey: true,
+  })
+  declare id: string;
+
   @ForeignKey(() => Menu)
   @Column({
     type: DataType.UUID,
@@ -25,14 +31,6 @@ export default class MenuOption extends Model {
     field: 'menu_id',
   })
   declare menuId: string;
-
-  @PrimaryKey
-  @Column({
-    type: DataType.UUID,
-    allowNull: false,
-    field: 'option_number',
-  })
-  declare optionNumber: number;
 
   @BelongsTo(() => Menu)
   menu!: Menu;
@@ -52,9 +50,9 @@ export default class MenuOption extends Model {
   @Column({
     type: DataType.BOOLEAN,
     allowNull: false,
-    field: 'is_active',
+    defaultValue: true,
   })
-  isActive!: boolean;
+  enabled!: boolean;
 
   @CreatedAt
   @Column({ field: 'created_at' })
