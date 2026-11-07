@@ -71,7 +71,7 @@ export class DepartmentService {
     return {
       id: department.id,
       name: department.name,
-      description: department.description ?? null,
+      description: department.description ?? '',
       enabled: department.enabled,
       createdAt: department.createdAt,
       updatedAt: department.updatedAt,

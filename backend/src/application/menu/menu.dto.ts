@@ -13,6 +13,8 @@ import {
   ValidateNested,
 } from 'class-validator';
 
+import { IsOmittable } from '@/shared/is-omittable.decorator';
+
 export class CreateMenuOptionRequest {
   @IsNotEmpty()
   @IsString()
@@ -29,9 +31,7 @@ export class CreateMenuOptionRequest {
 }
 
 export class CreateOrUpdateMenuOptionRequest {
-  @ValidateIf(
-    (_request: unknown, value: unknown): boolean => value !== undefined,
-  )
+  @IsOmittable()
   @IsUUID(4)
   id?: string;
 
@@ -44,16 +44,12 @@ export class CreateOrUpdateMenuOptionRequest {
   @Length(1, 100)
   name?: string;
 
-  @ValidateIf(
-    (_request: unknown, value: unknown): boolean => value !== undefined,
-  )
+  @IsOmittable()
   @IsString()
   @Length(0, 255)
   description?: string;
 
-  @ValidateIf(
-    (_request: unknown, value: unknown): boolean => value !== undefined,
-  )
+  @IsOmittable()
   @IsArray()
   @IsUUID(4, { each: true })
   restrictionsId?: string[];
@@ -100,6 +96,7 @@ export class CreateMenuRequest {
   @Length(1, 100)
   title!: string;
 
+  @IsOmittable()
   @IsString()
   @Length(0, 255)
   description: string = '';
@@ -111,37 +108,27 @@ export class CreateMenuRequest {
 }
 
 export class UpdateMenuRequest {
-  @ValidateIf(
-    (_request: unknown, value: unknown): boolean => value !== undefined,
-  )
+  @IsOmittable()
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   date?: string;
 
-  @ValidateIf(
-    (_request: unknown, value: unknown): boolean => value !== undefined,
-  )
+  @IsOmittable()
   @IsDateString({ strict: true, strictSeparator: true })
   @Matches(/T.*(?:Z|[+-]\d{2}:\d{2})$/)
   deadlineAt?: string;
 
-  @ValidateIf(
-    (_request: unknown, value: unknown): boolean => value !== undefined,
-  )
+  @IsOmittable()
   @IsString()
   @Length(1, 100)
   title?: string;
 
-  @ValidateIf(
-    (_request: unknown, value: unknown): boolean => value !== undefined,
-  )
+  @IsOmittable()
   @IsString()
   @Length(0, 255)
-  description?: string;
+  description: string = '';
 
-  @ValidateIf(
-    (_request: unknown, value: unknown): boolean => value !== undefined,
-  )
+  @IsOmittable()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateOrUpdateMenuOptionRequest)
@@ -163,7 +150,7 @@ export class MenuResponse {
   title!: string;
 
   @IsString()
-  description!: string;
+  description: string = '';
 
   @IsBoolean()
   enabled!: boolean;

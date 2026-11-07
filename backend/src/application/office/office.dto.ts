@@ -2,10 +2,11 @@ import {
   IsBoolean,
   IsDate,
   IsNotEmpty,
-  IsOptional,
   IsString,
   Length,
 } from 'class-validator';
+
+import { IsOmittable } from '@/shared/is-omittable.decorator';
 
 export class CreateOfficeRequest {
   @IsNotEmpty()
@@ -30,22 +31,22 @@ export class CreateOfficeRequest {
 }
 
 export class UpdateOfficeRequest {
-  @IsOptional()
+  @IsOmittable()
   @IsString()
   @Length(1, 100)
   name?: string;
 
-  @IsOptional()
+  @IsOmittable()
   @IsString()
   @Length(1, 100)
   city?: string;
 
-  @IsOptional()
+  @IsOmittable()
   @IsString()
   @Length(1, 100)
   country?: string;
 
-  @IsOptional()
+  @IsOmittable()
   @IsString()
   @Length(1, 255)
   address?: string;

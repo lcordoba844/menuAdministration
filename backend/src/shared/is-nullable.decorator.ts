@@ -1,5 +1,7 @@
 import { IsDefined, ValidateIf, ValidationOptions } from 'class-validator';
 
+import { registerPresenceSchema } from '@/shared/presence-schema';
+
 /**
  * Allows null values.
  */
@@ -10,5 +12,6 @@ export function IsNullable(options?: ValidationOptions): PropertyDecorator {
       options,
     )(target, propertyKey);
     IsDefined(options)(target, propertyKey);
+    registerPresenceSchema(target, propertyKey, 'nullable');
   };
 }
