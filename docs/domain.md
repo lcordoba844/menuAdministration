@@ -94,7 +94,6 @@ classDiagram
     +OrderTargetKind target_kind
     +Text target_guest_name?
     +ID target_user_id?
-    +DecisionKind decision_kind
     +ID menu_option_id?
     +Text comment?
     +Boolean enabled
@@ -143,13 +142,6 @@ classDiagram
   }
 
 
-  class DecisionKind {
-    <<enumeration>>
-    option
-    no_order
-  }
-
-
 
 
   User "1" --> "0..1" Diner : profile
@@ -173,6 +165,5 @@ classDiagram
   Diner "0..*" --> "0..*" DietaryRestriction : dietary_preferences
   UserPermissionGrant --> UserPermission
   Order --> OrderTargetKind
-  Order --> DecisionKind
   MenuOption "0..*" --> "0..*" DietaryRestriction : dietary_restrictions
 ```
