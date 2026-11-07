@@ -27,16 +27,17 @@ export default class DietaryRestriction extends Model {
 
   @Column({
     type: DataType.STRING,
-    allowNull: true,
+    allowNull: false,
+    defaultValue: '',
   })
-  description?: string;
+  description!: string;
 
   @Column({
     type: DataType.BOOLEAN,
     allowNull: false,
-    field: 'is_active',
+    defaultValue: true,
   })
-  isActive!: boolean;
+  enabled!: boolean;
 
   @CreatedAt
   @Column({ field: 'created_at' })
