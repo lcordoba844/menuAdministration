@@ -8,9 +8,10 @@ import {
   UpdatedAt,
   ForeignKey,
   BelongsTo,
-  PrimaryKey,
+  BelongsToMany,
 } from 'sequelize-typescript';
 
+import DietaryRestriction from '@/models/dietary_restriction.model';
 import Menu from '@/models/menu.model';
 
 @Table({
@@ -18,6 +19,13 @@ import Menu from '@/models/menu.model';
   timestamps: true,
 })
 export default class MenuOption extends Model {
+  @Column({
+    type: DataType.UUID,
+    defaultValue: DataType.UUIDV4,
+    primaryKey: true,
+  })
+  declare id: string;
+
   @ForeignKey(() => Menu)
   @Column({
     type: DataType.UUID,
@@ -25,14 +33,6 @@ export default class MenuOption extends Model {
     field: 'menu_id',
   })
   declare menuId: string;
-
-  @PrimaryKey
-  @Column({
-    type: DataType.UUID,
-    allowNull: false,
-    field: 'option_number',
-  })
-  declare optionNumber: number;
 
   @BelongsTo(() => Menu)
   menu!: Menu;
@@ -46,15 +46,23 @@ export default class MenuOption extends Model {
   @Column({
     type: DataType.STRING,
     allowNull: false,
+    defaultValue: '',
   })
   description!: string;
+
+  @BelongsToMany(() => DietaryRestriction, {
+    through: 'menu_option_dietary_restrictions',
+    foreignKey: 'menuOptionId',
+    otherKey: 'dietaryRestrictionId',
+  })
+  dietaryRestrictions!: DietaryRestriction[];
 
   @Column({
     type: DataType.BOOLEAN,
     allowNull: false,
-    field: 'is_active',
+    defaultValue: true,
   })
-  isActive!: boolean;
+  enabled!: boolean;
 
   @CreatedAt
   @Column({ field: 'created_at' })

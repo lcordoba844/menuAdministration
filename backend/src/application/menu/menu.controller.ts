@@ -45,7 +45,7 @@ export class MenuController {
 
   @Post()
   @HttpCode(201)
-  @OpenAPI({ summary: 'Create a new menu' })
+  @OpenAPI({ summary: 'Create a new menu with its options' })
   @ResponseSchema(MenuResponse)
   public async createMenu(
     @Req() request: AuthenticatedRequest,
@@ -55,19 +55,25 @@ export class MenuController {
   }
 
   @Put('/:id')
-  @OpenAPI({ summary: 'Update a menu' })
+  @OpenAPI({
+    summary: 'Update a menu with its options',
+  })
   @ResponseSchema(MenuResponse)
   public async updateMenu(
     @Param('id') id: string,
-    @Body() request: UpdateMenuRequest,
+    @Req() request: AuthenticatedRequest,
+    @Body() body: UpdateMenuRequest,
   ): Promise<MenuResponse> {
-    return await this.menuService.updateMenu(id, request);
+    return await this.menuService.updateMenu(id, request.auth.userId, body);
   }
 
   @Delete('/:id')
   @HttpCode(204)
-  @OpenAPI({ summary: 'Delete a menu' })
-  public async deleteMenu(@Param('id') id: string): Promise<void> {
-    await this.menuService.deleteMenu(id);
+  @OpenAPI({ summary: 'Delete a menu and its options' })
+  public async deleteMenu(
+    @Param('id') id: string,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<void> {
+    await this.menuService.deleteMenu(id, request.auth.userId);
   }
 }
