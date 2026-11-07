@@ -42,7 +42,7 @@ export default class Menu extends Model {
     allowNull: false,
     defaultValue: '',
   })
-  description!: string;
+  description?: string | null;
 
   @Column({
     type: DataType.DATE,
