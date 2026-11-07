@@ -39,7 +39,8 @@ export default class Menu extends Model {
 
   @Column({
     type: DataType.STRING,
-    allowNull: true,
+    allowNull: false,
+    defaultValue: '',
   })
   description?: string | null;
 
