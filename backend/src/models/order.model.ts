@@ -7,10 +7,8 @@ import {
   UpdatedAt,
   ForeignKey,
   BelongsTo,
-  BelongsToMany,
 } from 'sequelize-typescript';
 
-import DietaryRestriction from '@/models/dietary_restriction.model';
 import Menu from '@/models/menu.model';
 import MenuOption from '@/models/menu_option.model';
 import User from '@/models/user.model';
@@ -19,11 +17,6 @@ export enum OrderTargetKind {
   SELF = 'self',
   GUEST = 'guest',
   USER = 'user',
-}
-
-export enum DecisionKind {
-  OPTION = 'option',
-  NO_ORDER = 'no_order',
 }
 
 @Table({
@@ -68,7 +61,7 @@ export default class Order extends Model {
   })
   placedByUserId!: string;
 
-  @BelongsTo(() => User, 'placed_by_user_id')
+  @BelongsTo(() => User, 'placedByUserId')
   placedBy!: User;
 
   @ForeignKey(() => User)
@@ -77,10 +70,10 @@ export default class Order extends Model {
     allowNull: true,
     field: 'target_user_id',
   })
-  targetUserId?: string;
+  targetUserId?: string | null;
 
-  @BelongsTo(() => User, 'target_user_id')
-  targetUser?: User;
+  @BelongsTo(() => User, 'targetUserId')
+  targetUser?: User | null;
 
   @Column({
     type: DataType.ENUM(...Object.values(OrderTargetKind)),
@@ -94,34 +87,28 @@ export default class Order extends Model {
     allowNull: true,
     field: 'target_guest_name',
   })
-  targetGuestName?: string;
-
-  @Column({
-    type: DataType.ENUM(...Object.values(DecisionKind)),
-    allowNull: false,
-    field: 'decision_kind',
-  })
-  decisionKind!: DecisionKind;
+  targetGuestName?: string | null;
 
   @Column({
     type: DataType.TEXT,
-    allowNull: true,
+    allowNull: false,
+    defaultValue: '',
   })
-  comment?: string;
-
-  @BelongsToMany(() => DietaryRestriction, {
-    through: 'order_dietary_restrictions',
-    foreignKey: 'orderId',
-    otherKey: 'dietaryRestrictionId',
-  })
-  dietaryRestrictions!: DietaryRestriction[];
+  comment!: string;
 
   @Column({
     type: DataType.DATE,
     allowNull: true,
     field: 'locked_at',
   })
-  lockedAt?: Date;
+  lockedAt?: Date | null;
+
+  @Column({
+    type: DataType.BOOLEAN,
+    allowNull: false,
+    defaultValue: true,
+  })
+  enabled!: boolean;
 
   @CreatedAt
   @Column({ field: 'created_at' })
