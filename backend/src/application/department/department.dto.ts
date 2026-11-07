@@ -2,11 +2,11 @@ import {
   IsBoolean,
   IsDate,
   IsNotEmpty,
-  IsOptional,
   IsString,
   Length,
-  ValidateIf,
 } from 'class-validator';
+
+import { IsOmittable } from '@/shared/is-omittable.decorator';
 
 export class CreateDepartmentRequest {
   @IsNotEmpty()
@@ -14,24 +14,22 @@ export class CreateDepartmentRequest {
   @Length(1, 100)
   name!: string;
 
-  @IsOptional()
+  @IsOmittable()
   @IsString()
   @Length(0, 255)
-  description?: string | null;
+  description: string = '';
 }
 
 export class UpdateDepartmentRequest {
-  @ValidateIf(
-    (_request: unknown, value: unknown): boolean => value !== undefined,
-  )
+  @IsOmittable()
   @IsString()
   @Length(1, 100)
   name?: string;
 
-  @IsOptional()
+  @IsOmittable()
   @IsString()
   @Length(0, 255)
-  description?: string | null;
+  description: string = '';
 }
 
 export class DepartmentResponse {
@@ -41,9 +39,8 @@ export class DepartmentResponse {
   @IsString()
   name!: string;
 
-  @IsOptional()
   @IsString()
-  description!: string | null;
+  description: string = '';
 
   @IsBoolean()
   enabled!: boolean;

@@ -84,6 +84,14 @@ export default tseslint.config(
         'error',
         {
           patterns: ['./*', '../*'],
+          paths: [
+            {
+              name: 'class-validator',
+              importNames: ['IsOptional'],
+              message:
+                'Use IsOmittable, IsNullable, or both to express the accepted values.',
+            },
+          ],
         },
       ],
     },

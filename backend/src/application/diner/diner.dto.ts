@@ -3,12 +3,12 @@ import {
   IsBoolean,
   IsDate,
   IsNotEmpty,
-  IsOptional,
   IsString,
   IsUUID,
   Length,
-  ValidateIf,
 } from 'class-validator';
+
+import { IsOmittable } from '@/shared/is-omittable.decorator';
 
 export class CreateDinerRequest {
   @IsString()
@@ -22,35 +22,27 @@ export class CreateDinerRequest {
   @IsUUID(4)
   departmentId!: string;
 
-  @IsOptional()
+  @IsOmittable()
   @IsArray()
   @IsUUID(4, { each: true })
   dietaryRestrictionIds?: string[];
 }
 
 export class UpdateDinerRequest {
-  @ValidateIf(
-    (_request: unknown, value: unknown): boolean => value !== undefined,
-  )
+  @IsOmittable()
   @IsString()
   @Length(1, 255)
   name?: string;
 
-  @ValidateIf(
-    (_request: unknown, value: unknown): boolean => value !== undefined,
-  )
+  @IsOmittable()
   @IsUUID(4)
   officeId?: string;
 
-  @ValidateIf(
-    (_request: unknown, value: unknown): boolean => value !== undefined,
-  )
+  @IsOmittable()
   @IsUUID(4)
   departmentId?: string;
 
-  @ValidateIf(
-    (_request: unknown, value: unknown): boolean => value !== undefined,
-  )
+  @IsOmittable()
   @IsArray()
   @IsUUID(4, { each: true })
   dietaryRestrictionIds?: string[];

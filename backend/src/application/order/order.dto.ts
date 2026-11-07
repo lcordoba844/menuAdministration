@@ -1,17 +1,12 @@
-import {
-  IsBoolean,
-  IsDate,
-  IsEnum,
-  IsOptional,
-  IsString,
-  IsUUID,
-  ValidateIf,
-} from 'class-validator';
+import { IsBoolean, IsDate, IsEnum, IsString, IsUUID } from 'class-validator';
 
 import { OrderTargetKind } from '@/models/order.model';
+import { IsNullable } from '@/shared/is-nullable.decorator';
+import { IsOmittable } from '@/shared/is-omittable.decorator';
 
 export class CreateOrderRequest {
-  @IsOptional()
+  @IsOmittable()
+  @IsNullable()
   @IsUUID(4)
   menuOptionId?: string | null;
 
@@ -20,13 +15,12 @@ export class CreateOrderRequest {
 }
 
 export class UpdateOrderRequest {
-  @IsOptional()
+  @IsOmittable()
+  @IsNullable()
   @IsUUID(4)
   menuOptionId?: string | null;
 
-  @ValidateIf(
-    (_request: unknown, value: unknown): boolean => value !== undefined,
-  )
+  @IsOmittable()
   @IsString()
   comment?: string;
 }
@@ -44,15 +38,15 @@ export class OrderResponse {
   @IsEnum(OrderTargetKind)
   targetKind!: OrderTargetKind;
 
-  @IsOptional()
+  @IsNullable()
   @IsUUID(4)
   targetUserId!: string | null;
 
-  @IsOptional()
+  @IsNullable()
   @IsString()
   targetGuestName!: string | null;
 
-  @IsOptional()
+  @IsNullable()
   @IsUUID(4)
   menuOptionId!: string | null;
 
@@ -62,7 +56,7 @@ export class OrderResponse {
   @IsBoolean()
   enabled!: boolean;
 
-  @IsOptional()
+  @IsNullable()
   @IsDate()
   lockedAt!: Date | null;
 
