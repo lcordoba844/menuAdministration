@@ -1,6 +1,9 @@
-import { ClipboardList, House, UtensilsCrossed } from 'lucide-react';
+import { ClipboardList, House, LogOut, UtensilsCrossed } from 'lucide-react';
 import type { ReactElement } from 'react';
-import { NavLink, Route, Routes } from 'react-router';
+import { Navigate, NavLink, Outlet, Route, Routes } from 'react-router';
+
+import { useAuth } from '@/auth/auth-context';
+import { LoginPage } from '@/auth/LoginPage';
 
 function Placeholder({
   title,
@@ -17,48 +20,16 @@ function Placeholder({
   );
 }
 
-function App(): ReactElement {
+function AuthenticatedLayout(): ReactElement {
+  const { status, logout } = useAuth();
+
+  if (status === 'unauthenticated') {
+    return <Navigate to="/login" replace />;
+  }
+
   return (
     <main className="mx-auto max-w-2xl px-6 py-24 text-center">
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <Placeholder
-              title="Welcome to Menu Administration"
-              description="Your place to manage menus and meal orders. More coming soon."
-            />
-          }
-        />
-        <Route
-          path="/menus"
-          element={
-            <Placeholder
-              title="Menus"
-              description="Menu management is coming soon."
-            />
-          }
-        />
-        <Route
-          path="/orders"
-          element={
-            <Placeholder
-              title="Orders"
-              description="Meal orders are coming soon."
-            />
-          }
-        />
-        <Route
-          path="*"
-          element={
-            <Placeholder
-              title="Page not found"
-              description="Use the links below to find your way back."
-            />
-          }
-        />
-      </Routes>
-
+      <Outlet />
       <nav
         aria-label="Main navigation"
         className="mt-8 flex flex-wrap justify-center gap-3"
@@ -91,8 +62,58 @@ function App(): ReactElement {
           <ClipboardList size={18} aria-hidden="true" />
           Orders
         </NavLink>
+        <button type="button" onClick={logout} className="btn btn-ghost">
+          <LogOut size={18} aria-hidden="true" />
+          Sign out
+        </button>
       </nav>
     </main>
+  );
+}
+
+function App(): ReactElement {
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route element={<AuthenticatedLayout />}>
+        <Route
+          path="/"
+          element={
+            <Placeholder
+              title="Welcome to Menu Administration"
+              description="Your place to manage menus and meal orders."
+            />
+          }
+        />
+        <Route
+          path="/menus"
+          element={
+            <Placeholder
+              title="Menus"
+              description="Menu management is coming soon."
+            />
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            <Placeholder
+              title="Orders"
+              description="Meal orders are coming soon."
+            />
+          }
+        />
+        <Route
+          path="*"
+          element={
+            <Placeholder
+              title="Page not found"
+              description="Use the links below to find your way back."
+            />
+          }
+        />
+      </Route>
+    </Routes>
   );
 }
 

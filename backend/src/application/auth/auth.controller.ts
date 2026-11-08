@@ -16,7 +16,12 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('/login')
-  @OpenAPI({ summary: 'Authenticate user and retrieve a JWT' })
+  @OpenAPI({
+    summary: 'Authenticate user and retrieve a JWT',
+    responses: {
+      '401': { description: 'Invalid credentials or disabled account' },
+    },
+  })
   @ResponseSchema(LoginResponse)
   public async login(@Body() request: LoginRequest): Promise<LoginResponse> {
     const jwt = await this.authService.login(request);
@@ -24,7 +29,12 @@ export class AuthController {
   }
 
   @Post('/register')
-  @OpenAPI({ summary: 'Create a new user account' })
+  @OpenAPI({
+    summary: 'Create a new user account',
+    responses: {
+      '409': { description: 'Email already in use' },
+    },
+  })
   @ResponseSchema(RegisterResponse)
   public async register(
     @Body() request: RegisterRequest,

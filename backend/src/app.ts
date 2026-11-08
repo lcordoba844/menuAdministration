@@ -48,7 +48,7 @@ export class App {
   }
 
   private initializePreControllerMiddleware(): void {
-    this.app.use(cors({ origin: 'http://localhost' }));
+    this.app.use(cors({ origin: environment.frontendOrigin }));
     this.app.use(requestLogger());
   }
 
