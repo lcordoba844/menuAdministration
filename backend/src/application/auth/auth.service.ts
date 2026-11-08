@@ -1,5 +1,6 @@
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
+import { HttpError, UnauthorizedError } from 'routing-controllers';
 import { Service } from 'typedi';
 
 import {
@@ -15,8 +16,8 @@ import User from '@/models/user.model';
 export class AuthService {
   public async login(request: LoginRequest): Promise<string> {
     const user = await User.findOne({ where: { email: request.email } });
-    if (!user) {
-      throw new Error('Invalid credentials');
+    if (!user || !user.enabled) {
+      throw new UnauthorizedError('Invalid credentials');
     }
 
     const isPasswordValid = await bcrypt.compare(
@@ -24,7 +25,7 @@ export class AuthService {
       user.password,
     );
     if (!isPasswordValid) {
-      throw new Error('Invalid credentials');
+      throw new UnauthorizedError('Invalid credentials');
     }
 
     return this.generateToken({
@@ -36,7 +37,9 @@ export class AuthService {
   private generateToken(payload: AuthPayload): string {
     const secret = environment.jwtSecret;
 
-    return jwt.sign(payload, secret, { expiresIn: '24h' });
+    return jwt.sign(payload, secret, {
+      expiresIn: environment.jwtExpiresIn as jwt.SignOptions['expiresIn'],
+    });
   }
 
   public async createAccount(
@@ -46,7 +49,7 @@ export class AuthService {
       where: { email: request.email },
     });
     if (existingUser) {
-      throw new Error('Email already in use');
+      throw new HttpError(409, 'Email already in use');
     }
 
     const saltRounds = 10;

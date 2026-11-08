@@ -7,4 +7,5 @@
 body {
   @apply bg-base-200 text-base-content antialiased;
   min-width: 320px;
+  min-height: 100dvh;
 }
