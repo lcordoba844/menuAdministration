@@ -3,6 +3,7 @@ import {
   ClipboardList,
   House,
   LogOut,
+  Network,
   UtensilsCrossed,
 } from 'lucide-react';
 import type { ReactElement } from 'react';
@@ -10,6 +11,7 @@ import { Navigate, NavLink, Outlet, Route, Routes } from 'react-router';
 
 import { useAuth } from '@/auth/auth-context';
 import { LoginPage } from '@/auth/LoginPage';
+import { DepartmentsPage } from '@/features/departments/DepartmentsPage';
 import { OfficesPage } from '@/features/offices/OfficesPage';
 
 function Placeholder({
@@ -78,6 +80,15 @@ function AuthenticatedLayout(): ReactElement {
           <Building2 size={18} aria-hidden="true" />
           Offices
         </NavLink>
+        <NavLink
+          to="/departments"
+          className={({ isActive }) =>
+            `btn ${isActive ? 'btn-primary' : 'btn-outline'}`
+          }
+        >
+          <Network size={18} aria-hidden="true" />
+          Departments
+        </NavLink>
         <button type="button" onClick={logout} className="btn btn-ghost">
           <LogOut size={18} aria-hidden="true" />
           Sign out
@@ -93,6 +104,7 @@ function App(): ReactElement {
       <Route path="/login" element={<LoginPage />} />
       <Route element={<AuthenticatedLayout />}>
         <Route path="/offices" element={<OfficesPage />} />
+        <Route path="/departments" element={<DepartmentsPage />} />
         <Route
           path="/"
           element={
