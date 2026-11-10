@@ -67,7 +67,7 @@ export class OrderService {
       throw new BadRequestError('User must have an enabled diner profile');
     }
     const existingOrder = await Order.findOne({
-      where: { menuId, targetUserId: userId, enabled: true },
+      where: { menuId, targetDinerId: diner.id, enabled: true },
     });
     if (existingOrder) {
       throw new HttpError(
@@ -84,7 +84,7 @@ export class OrderService {
         menuId,
         placedByUserId: userId,
         targetKind: OrderTargetKind.SELF,
-        targetUserId: userId,
+        targetDinerId: diner.id,
         targetGuestName: null,
         menuOptionId,
         comment: request.comment ?? '',
@@ -147,13 +147,17 @@ export class OrderService {
     id: string,
     userId: string,
   ): Promise<Order> {
+    const diner = await Diner.findOne({ where: { userId, enabled: true } });
+    if (!diner) {
+      throw new NotFoundError('Diner not found');
+    }
     const order = await Order.findOne({
       where: {
         id,
         menuId,
         placedByUserId: userId,
         targetKind: OrderTargetKind.SELF,
-        targetUserId: userId,
+        targetDinerId: diner.id,
         enabled: true,
       },
     });
@@ -201,7 +205,7 @@ export class OrderService {
       menuId: order.menuId,
       placedByUserId: order.placedByUserId,
       targetKind: order.targetKind,
-      targetUserId: order.targetUserId ?? null,
+      targetDinerId: order.targetDinerId ?? null,
       targetGuestName: order.targetGuestName ?? null,
       menuOptionId: order.menuOptionId ?? null,
       comment: order.comment ?? '',

@@ -9,6 +9,7 @@ import {
   BelongsTo,
 } from 'sequelize-typescript';
 
+import Diner from '@/models/diner.model';
 import Menu from '@/models/menu.model';
 import MenuOption from '@/models/menu_option.model';
 import User from '@/models/user.model';
@@ -64,16 +65,16 @@ export default class Order extends Model {
   @BelongsTo(() => User, 'placedByUserId')
   placedBy!: User;
 
-  @ForeignKey(() => User)
+  @ForeignKey(() => Diner)
   @Column({
     type: DataType.UUID,
     allowNull: true,
-    field: 'target_user_id',
+    field: 'target_diner_id',
   })
-  targetUserId?: string | null;
+  targetDinerId?: string | null;
 
-  @BelongsTo(() => User, 'targetUserId')
-  targetUser?: User | null;
+  @BelongsTo(() => Diner, 'targetDinerId')
+  targetDiner?: Diner | null;
 
   @Column({
     type: DataType.ENUM(...Object.values(OrderTargetKind)),

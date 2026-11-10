@@ -40,7 +40,7 @@ export class OrderResponse {
 
   @IsNullable()
   @IsUUID(4)
-  targetUserId!: string | null;
+  targetDinerId!: string | null;
 
   @IsNullable()
   @IsString()
