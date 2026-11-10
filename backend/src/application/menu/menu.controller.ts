@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   JsonController,
+  OnUndefined,
   Param,
   Post,
   Put,
@@ -69,6 +70,7 @@ export class MenuController {
 
   @Delete('/:id')
   @HttpCode(204)
+  @OnUndefined(204)
   @OpenAPI({ summary: 'Delete a menu and its options' })
   public async deleteMenu(
     @Param('id') id: string,

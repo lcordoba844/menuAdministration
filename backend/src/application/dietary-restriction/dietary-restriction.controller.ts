@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   JsonController,
+  OnUndefined,
   Param,
   Post,
   Put,
@@ -70,6 +71,7 @@ export class DietaryRestrictionController {
 
   @Delete('/:id')
   @HttpCode(204)
+  @OnUndefined(204)
   @OpenAPI({ summary: 'Delete a dietary restriction' })
   public async deleteDietaryRestriction(
     @Param('id') id: string,

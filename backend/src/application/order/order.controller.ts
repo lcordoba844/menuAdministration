@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   JsonController,
+  OnUndefined,
   Param,
   Post,
   Put,
@@ -89,6 +90,7 @@ export class OrderController {
 
   @Delete('/:id')
   @HttpCode(204)
+  @OnUndefined(204)
   @OpenAPI({ summary: 'Delete a self-order for the authenticated user' })
   public async deleteOrder(
     @Param('menuId') menuId: string,

@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   JsonController,
+  OnUndefined,
   Param,
   Post,
   Put,
@@ -54,6 +55,7 @@ export class OfficeController {
 
   @Delete('/:id')
   @HttpCode(204)
+  @OnUndefined(204)
   @OpenAPI({ summary: 'Delete an office' })
   public async deleteOffice(@Param('id') id: string): Promise<void> {
     await this.officeService.deleteOffice(id);

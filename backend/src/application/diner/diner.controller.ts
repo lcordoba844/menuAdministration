@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   JsonController,
+  OnUndefined,
   Post,
   Put,
   Req,
@@ -60,6 +61,7 @@ export class DinerController {
 
   @Delete('/me')
   @HttpCode(204)
+  @OnUndefined(204)
   @OpenAPI({ summary: 'Delete the diner profile for the authenticated user' })
   public async deleteDiner(
     @Req() request: AuthenticatedRequest,
