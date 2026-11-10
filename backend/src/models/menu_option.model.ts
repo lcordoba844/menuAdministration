@@ -58,6 +58,16 @@ export default class MenuOption extends Model {
   dietaryRestrictions!: DietaryRestriction[];
 
   @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+    validate: {
+      min: 0,
+      isInt: true,
+    },
+  })
+  count!: number;
+
+  @Column({
     type: DataType.BOOLEAN,
     allowNull: false,
     defaultValue: true,
