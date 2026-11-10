@@ -7,4 +7,4 @@ export interface Department {
   updatedAt: string;
 }
 
-export type DepartmentInput = Pick<Department, 'name' | 'description'>;
+export type SaveDepartmentRequest = Pick<Department, 'name' | 'description'>;

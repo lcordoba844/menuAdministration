@@ -1,7 +1,7 @@
 import { Network, Pencil, Plus, Trash2 } from 'lucide-react';
 import type { ReactElement } from 'react';
 
-import type { Department } from '@/features/departments/departments-types';
+import type { Department } from '@/features/departments/department.types';
 
 interface DepartmentListProps {
   departments: Department[];

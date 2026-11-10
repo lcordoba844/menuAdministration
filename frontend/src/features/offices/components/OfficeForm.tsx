@@ -2,13 +2,13 @@ import { Check, X } from 'lucide-react';
 import { useState } from 'react';
 import type { ReactElement, SubmitEvent } from 'react';
 
-import type { OfficeInput } from '@/features/offices/offices-types';
+import type { SaveOfficeRequest } from '@/features/offices/office.types';
 
 interface OfficeFormProps {
-  initialValue?: OfficeInput;
-  loading: boolean;
+  initialValue?: SaveOfficeRequest;
+  isSaving: boolean;
   error: string;
-  onSave: (input: OfficeInput) => Promise<void>;
+  onSave: (input: SaveOfficeRequest) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -41,19 +41,19 @@ const fields = [
 
 export function OfficeForm({
   initialValue,
-  loading,
+  isSaving,
   error,
   onSave,
   onCancel,
 }: OfficeFormProps): ReactElement {
-  const [values, setValues] = useState<OfficeInput>(
+  const [values, setValues] = useState<SaveOfficeRequest>(
     initialValue ?? { name: '', city: '', country: '', address: '' },
   );
   const [validationError, setValidationError] = useState('');
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>): void {
     event.preventDefault();
-    if (loading) return;
+    if (isSaving) return;
     const input = {
       name: values.name.trim(),
       city: values.city.trim(),
@@ -90,13 +90,13 @@ export function OfficeForm({
             className="btn btn-ghost btn-square btn-sm"
             aria-label="Close office form"
             onClick={onCancel}
-            disabled={loading}
+            disabled={isSaving}
           >
             <X size={18} aria-hidden="true" />
           </button>
         </div>
-        <form onSubmit={handleSubmit} aria-busy={loading}>
-          <fieldset disabled={loading} className="grid gap-4 sm:grid-cols-2">
+        <form onSubmit={handleSubmit} aria-busy={isSaving}>
+          <fieldset disabled={isSaving} className="grid gap-4 sm:grid-cols-2">
             {fields.map((field) => (
               <div
                 key={field.name}
@@ -138,16 +138,16 @@ export function OfficeForm({
               type="button"
               className="btn btn-ghost"
               onClick={onCancel}
-              disabled={loading}
+              disabled={isSaving}
             >
               Cancel
             </button>
             <button
               type="submit"
               className="btn btn-primary"
-              disabled={loading}
+              disabled={isSaving}
             >
-              {loading ? (
+              {isSaving ? (
                 <span
                   className="loading loading-spinner loading-sm"
                   aria-hidden="true"
@@ -155,7 +155,7 @@ export function OfficeForm({
               ) : (
                 <Check size={18} aria-hidden="true" />
               )}
-              {loading
+              {isSaving
                 ? 'Saving…'
                 : initialValue
                   ? 'Save changes'

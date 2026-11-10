@@ -2,11 +2,11 @@ import { Trash2 } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import type { ReactElement } from 'react';
 
-import type { Office } from '@/features/offices/offices-types';
+import type { Office } from '@/features/offices/office.types';
 
 interface DeleteOfficeDialogProps {
   office: Office;
-  loading: boolean;
+  isDeleting: boolean;
   error: string;
   onConfirm: () => void;
   onCancel: () => void;
@@ -14,7 +14,7 @@ interface DeleteOfficeDialogProps {
 
 export function DeleteOfficeDialog({
   office,
-  loading,
+  isDeleting,
   error,
   onConfirm,
   onCancel,
@@ -35,7 +35,7 @@ export function DeleteOfficeDialog({
       aria-describedby="delete-office-description"
       onCancel={(event) => {
         event.preventDefault();
-        if (!loading) onCancel();
+        if (!isDeleting) onCancel();
       }}
     >
       <div className="modal-box text-left">
@@ -59,7 +59,7 @@ export function DeleteOfficeDialog({
             className="btn btn-ghost"
             autoFocus
             onClick={onCancel}
-            disabled={loading}
+            disabled={isDeleting}
           >
             Cancel
           </button>
@@ -67,15 +67,15 @@ export function DeleteOfficeDialog({
             type="button"
             className="btn btn-error"
             onClick={onConfirm}
-            disabled={loading}
+            disabled={isDeleting}
           >
-            {loading && (
+            {isDeleting && (
               <span
                 className="loading loading-spinner loading-sm"
                 aria-hidden="true"
               />
             )}
-            {loading ? 'Deleting…' : 'Delete office'}
+            {isDeleting ? 'Deleting…' : 'Delete office'}
           </button>
         </div>
       </div>

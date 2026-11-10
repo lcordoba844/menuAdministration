@@ -1,7 +1,7 @@
 import { Building2, Pencil, Plus, Trash2 } from 'lucide-react';
 import type { ReactElement } from 'react';
 
-import type { Office } from '@/features/offices/offices-types';
+import type { Office } from '@/features/offices/office.types';
 
 interface OfficeListProps {
   offices: Office[];

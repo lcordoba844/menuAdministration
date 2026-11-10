@@ -2,31 +2,31 @@ import { Check, X } from 'lucide-react';
 import { useState } from 'react';
 import type { ReactElement, SubmitEvent } from 'react';
 
-import type { DepartmentInput } from '@/features/departments/departments-types';
+import type { SaveDepartmentRequest } from '@/features/departments/department.types';
 
 interface DepartmentFormProps {
-  initialValue?: DepartmentInput;
-  loading: boolean;
+  initialValue?: SaveDepartmentRequest;
+  isSaving: boolean;
   error: string;
-  onSave: (input: DepartmentInput) => Promise<void>;
+  onSave: (input: SaveDepartmentRequest) => Promise<void>;
   onCancel: () => void;
 }
 
 export function DepartmentForm({
   initialValue,
-  loading,
+  isSaving,
   error,
   onSave,
   onCancel,
 }: DepartmentFormProps): ReactElement {
-  const [values, setValues] = useState<DepartmentInput>(
+  const [values, setValues] = useState<SaveDepartmentRequest>(
     initialValue ?? { name: '', description: '' },
   );
   const [validationError, setValidationError] = useState('');
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>): void {
     event.preventDefault();
-    if (loading) return;
+    if (isSaving) return;
     const input = {
       name: values.name.trim(),
       description: values.description.trim(),
@@ -59,13 +59,13 @@ export function DepartmentForm({
             className="btn btn-ghost btn-square btn-sm"
             aria-label="Close department form"
             onClick={onCancel}
-            disabled={loading}
+            disabled={isSaving}
           >
             <X size={18} aria-hidden="true" />
           </button>
         </div>
-        <form onSubmit={handleSubmit} aria-busy={loading}>
-          <fieldset disabled={loading} className="grid gap-4">
+        <form onSubmit={handleSubmit} aria-busy={isSaving}>
+          <fieldset disabled={isSaving} className="grid gap-4">
             <div className="flex flex-col gap-2">
               <label htmlFor="department-name" className="text-sm font-medium">
                 Department name
@@ -120,16 +120,16 @@ export function DepartmentForm({
               type="button"
               className="btn btn-ghost"
               onClick={onCancel}
-              disabled={loading}
+              disabled={isSaving}
             >
               Cancel
             </button>
             <button
               type="submit"
               className="btn btn-primary"
-              disabled={loading}
+              disabled={isSaving}
             >
-              {loading ? (
+              {isSaving ? (
                 <span
                   className="loading loading-spinner loading-sm"
                   aria-hidden="true"
@@ -137,7 +137,7 @@ export function DepartmentForm({
               ) : (
                 <Check size={18} aria-hidden="true" />
               )}
-              {loading
+              {isSaving
                 ? 'Saving…'
                 : initialValue
                   ? 'Save changes'

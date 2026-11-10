@@ -1,21 +1,18 @@
-import axios from 'axios';
 import { Building2, Plus, RefreshCw } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
 
 import { useAuth } from '@/auth/auth-context';
 import { DeleteOfficeDialog } from '@/features/offices/components/DeleteOfficeDialog';
 import { OfficeForm } from '@/features/offices/components/OfficeForm';
 import { OfficeList } from '@/features/offices/components/OfficeList';
-import {
-  createOffice,
-  deleteOffice,
-  getOffices,
-  updateOffice,
-} from '@/features/offices/offices-api';
-import type { Office, OfficeInput } from '@/features/offices/offices-types';
+import { OfficeApi } from '@/features/offices/office.api';
+import type {
+  Office,
+  SaveOfficeRequest,
+} from '@/features/offices/office.types';
 
-type ModalState =
+type PageAction =
   | { action: 'create' }
   | { action: 'edit'; office: Office }
   | { action: 'delete'; office: Office }
@@ -23,42 +20,29 @@ type ModalState =
 
 type FeedbackState = { type: 'success' | 'error'; text: string } | null;
 
-function getOfficeError(error: unknown): string {
-  if (axios.isAxiosError(error)) {
-    switch (error.response?.status) {
-      case 400:
-        return 'Check the office details and try again.';
-      case 401:
-        return 'Please sign in again.';
-      case 403:
-        return 'You do not have permission to perform this action.';
-      case 404:
-        return 'This office is no longer available. Refresh the list and try again.';
-      case 409:
-        return 'This action conflicts with an existing record.';
-    }
-  }
-  return 'An error ocurred. Please, try again later.';
-}
-
 export function OfficesPage(): ReactElement {
   const { api } = useAuth();
+  const officeApi = useMemo(() => new OfficeApi(api), [api]);
   const [offices, setOffices] = useState<Office[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [modal, setModal] = useState<ModalState>(null);
+  const [pageAction, setPageAction] = useState<PageAction>(null);
   const [feedback, setFeedback] = useState<FeedbackState>(null);
 
   const loadOffices = useCallback((): Promise<void> => {
-    return getOffices(api)
+    return officeApi
+      .getAll()
       .then(setOffices)
       .catch((error: unknown) => {
         setFeedback({
           type: 'error',
-          text: getOfficeError(error),
+          text:
+            error instanceof Error
+              ? error.message
+              : 'An unexpected error occurred.',
         });
       })
       .finally(() => setIsLoading(false));
-  }, [api]);
+  }, [officeApi]);
 
   useEffect(() => {
     void loadOffices();
@@ -70,22 +54,22 @@ export function OfficesPage(): ReactElement {
     void loadOffices();
   }
 
-  function openModal(next: ModalState): void {
+  function selectAction(next: PageAction): void {
     setFeedback(null);
-    setModal(next);
+    setPageAction(next);
   }
 
-  async function save(input: OfficeInput): Promise<void> {
-    if (!modal || modal.action === 'delete' || isLoading) return;
+  async function save(input: SaveOfficeRequest): Promise<void> {
+    if (!pageAction || pageAction.action === 'delete' || isLoading) return;
     setIsLoading(true);
     setFeedback(null);
     try {
-      if (modal.action === 'create') {
-        const created = await createOffice(api, input);
+      if (pageAction.action === 'create') {
+        const created = await officeApi.create(input);
         setOffices((previous) => [created, ...previous]);
         setFeedback({ type: 'success', text: 'Office created.' });
-      } else if (modal.action === 'edit') {
-        const updated = await updateOffice(api, modal.office.id, input);
+      } else if (pageAction.action === 'edit') {
+        const updated = await officeApi.update(pageAction.office.id, input);
         setOffices((previous) =>
           previous.map((office) =>
             office.id === updated.id ? updated : office,
@@ -93,11 +77,14 @@ export function OfficesPage(): ReactElement {
         );
         setFeedback({ type: 'success', text: 'Office updated.' });
       }
-      setModal(null);
+      setPageAction(null);
     } catch (error) {
       setFeedback({
         type: 'error',
-        text: getOfficeError(error),
+        text:
+          error instanceof Error
+            ? error.message
+            : 'An unexpected error occurred.',
       });
     } finally {
       setIsLoading(false);
@@ -105,20 +92,23 @@ export function OfficesPage(): ReactElement {
   }
 
   async function confirmDelete(): Promise<void> {
-    if (!modal || modal.action !== 'delete' || isLoading) return;
+    if (!pageAction || pageAction.action !== 'delete' || isLoading) return;
     setIsLoading(true);
     setFeedback(null);
     try {
-      await deleteOffice(api, modal.office.id);
+      await officeApi.delete(pageAction.office.id);
       setOffices((previous) =>
-        previous.filter((office) => office.id !== modal.office.id),
+        previous.filter((office) => office.id !== pageAction.office.id),
       );
       setFeedback({ type: 'success', text: 'Office deleted.' });
-      setModal(null);
+      setPageAction(null);
     } catch (error) {
       setFeedback({
         type: 'error',
-        text: getOfficeError(error),
+        text:
+          error instanceof Error
+            ? error.message
+            : 'An unexpected error occurred.',
       });
     } finally {
       setIsLoading(false);
@@ -143,8 +133,8 @@ export function OfficesPage(): ReactElement {
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => openModal({ action: 'create' })}
-          disabled={isLoading || modal !== null}
+          onClick={() => selectAction({ action: 'create' })}
+          disabled={isLoading || pageAction !== null}
         >
           <Plus size={18} aria-hidden="true" />
           Create office
@@ -155,20 +145,22 @@ export function OfficesPage(): ReactElement {
           <p className="alert alert-success text-sm">{feedback.text}</p>
         )}
       </div>
-      {(modal?.action === 'create' || modal?.action === 'edit') && (
+      {(pageAction?.action === 'create' || pageAction?.action === 'edit') && (
         <OfficeForm
-          key={modal.action === 'edit' ? modal.office.id : 'create'}
-          initialValue={modal.action === 'edit' ? modal.office : undefined}
-          loading={isLoading}
+          key={pageAction.action === 'edit' ? pageAction.office.id : 'create'}
+          initialValue={
+            pageAction.action === 'edit' ? pageAction.office : undefined
+          }
+          isSaving={isLoading}
           error={feedback?.type === 'error' ? feedback.text : ''}
           onSave={save}
-          onCancel={() => setModal(null)}
+          onCancel={() => setPageAction(null)}
         />
       )}
       <div className="flex items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 font-semibold">
           Office directory
-          {(!isLoading || modal !== null) && offices.length > 0 && (
+          {(!isLoading || pageAction !== null) && offices.length > 0 && (
             <span className="badge badge-neutral badge-sm">
               {offices.length}
             </span>
@@ -178,13 +170,13 @@ export function OfficesPage(): ReactElement {
           type="button"
           className="btn btn-ghost btn-sm"
           onClick={refresh}
-          disabled={isLoading || modal !== null}
+          disabled={isLoading || pageAction !== null}
         >
           <RefreshCw size={16} aria-hidden="true" />
           Refresh
         </button>
       </div>
-      {isLoading && modal === null && (
+      {isLoading && pageAction === null && (
         <div
           role="status"
           className="flex items-center justify-center gap-3 rounded-box border border-base-300 bg-base-100 py-16 text-base-content/60"
@@ -196,7 +188,7 @@ export function OfficesPage(): ReactElement {
           Loading offices…
         </div>
       )}
-      {!isLoading && feedback?.type === 'error' && modal === null && (
+      {!isLoading && feedback?.type === 'error' && pageAction === null && (
         <div
           role="alert"
           className="rounded-box border border-error/30 bg-base-100 p-6"
@@ -211,27 +203,27 @@ export function OfficesPage(): ReactElement {
           </button>
         </div>
       )}
-      {(!isLoading || modal !== null) &&
+      {(!isLoading || pageAction !== null) &&
         (offices.length > 0 ||
           feedback?.type !== 'error' ||
-          modal !== null) && (
+          pageAction !== null) && (
           <OfficeList
             offices={offices}
-            disabled={isLoading || modal !== null}
-            onCreate={() => openModal({ action: 'create' })}
-            onEdit={(office) => openModal({ action: 'edit', office })}
-            onDelete={(office) => openModal({ action: 'delete', office })}
+            disabled={isLoading || pageAction !== null}
+            onCreate={() => selectAction({ action: 'create' })}
+            onEdit={(office) => selectAction({ action: 'edit', office })}
+            onDelete={(office) => selectAction({ action: 'delete', office })}
           />
         )}
-      {modal?.action === 'delete' && (
+      {pageAction?.action === 'delete' && (
         <DeleteOfficeDialog
-          office={modal.office}
-          loading={isLoading}
+          office={pageAction.office}
+          isDeleting={isLoading}
           error={feedback?.type === 'error' ? feedback.text : ''}
           onConfirm={() => {
             void confirmDelete();
           }}
-          onCancel={() => setModal(null)}
+          onCancel={() => setPageAction(null)}
         />
       )}
     </section>

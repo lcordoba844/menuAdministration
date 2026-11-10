@@ -2,11 +2,11 @@ import { Trash2 } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import type { ReactElement } from 'react';
 
-import type { Department } from '@/features/departments/departments-types';
+import type { Department } from '@/features/departments/department.types';
 
 interface DeleteDepartmentDialogProps {
   department: Department;
-  loading: boolean;
+  isDeleting: boolean;
   error: string;
   onConfirm: () => void;
   onCancel: () => void;
@@ -14,7 +14,7 @@ interface DeleteDepartmentDialogProps {
 
 export function DeleteDepartmentDialog({
   department,
-  loading,
+  isDeleting,
   error,
   onConfirm,
   onCancel,
@@ -35,7 +35,7 @@ export function DeleteDepartmentDialog({
       aria-describedby="delete-department-description"
       onCancel={(event) => {
         event.preventDefault();
-        if (!loading) onCancel();
+        if (!isDeleting) onCancel();
       }}
     >
       <div className="modal-box text-left">
@@ -62,7 +62,7 @@ export function DeleteDepartmentDialog({
             className="btn btn-ghost"
             autoFocus
             onClick={onCancel}
-            disabled={loading}
+            disabled={isDeleting}
           >
             Cancel
           </button>
@@ -70,15 +70,15 @@ export function DeleteDepartmentDialog({
             type="button"
             className="btn btn-error"
             onClick={onConfirm}
-            disabled={loading}
+            disabled={isDeleting}
           >
-            {loading && (
+            {isDeleting && (
               <span
                 className="loading loading-spinner loading-sm"
                 aria-hidden="true"
               />
             )}
-            {loading ? 'Deleting…' : 'Delete department'}
+            {isDeleting ? 'Deleting…' : 'Delete department'}
           </button>
         </div>
       </div>

@@ -1,24 +1,18 @@
-import axios from 'axios';
 import { Network, Plus, RefreshCw } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
 
 import { useAuth } from '@/auth/auth-context';
 import { DeleteDepartmentDialog } from '@/features/departments/components/DeleteDepartmentDialog';
 import { DepartmentForm } from '@/features/departments/components/DepartmentForm';
 import { DepartmentList } from '@/features/departments/components/DepartmentList';
-import {
-  createDepartment,
-  deleteDepartment,
-  getDepartments,
-  updateDepartment,
-} from '@/features/departments/departments-api';
+import { DepartmentApi } from '@/features/departments/department.api';
 import type {
   Department,
-  DepartmentInput,
-} from '@/features/departments/departments-types';
+  SaveDepartmentRequest,
+} from '@/features/departments/department.types';
 
-type ModalState =
+type PageAction =
   | { action: 'create' }
   | { action: 'edit'; department: Department }
   | { action: 'delete'; department: Department }
@@ -26,42 +20,29 @@ type ModalState =
 
 type FeedbackState = { type: 'success' | 'error'; text: string } | null;
 
-function getDepartmentError(error: unknown): string {
-  if (axios.isAxiosError(error)) {
-    switch (error.response?.status) {
-      case 400:
-        return 'Check the department details and try again.';
-      case 401:
-        return 'Please sign in again.';
-      case 403:
-        return 'You do not have permission to perform this action.';
-      case 404:
-        return 'This department is no longer available. Refresh the list and try again.';
-      case 409:
-        return 'This action conflicts with an existing record.';
-    }
-  }
-  return 'An error occurred. Please try again later.';
-}
-
 export function DepartmentsPage(): ReactElement {
   const { api } = useAuth();
+  const departmentApi = useMemo(() => new DepartmentApi(api), [api]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [modal, setModal] = useState<ModalState>(null);
+  const [pageAction, setPageAction] = useState<PageAction>(null);
   const [feedback, setFeedback] = useState<FeedbackState>(null);
 
   const loadDepartments = useCallback((): Promise<void> => {
-    return getDepartments(api)
+    return departmentApi
+      .getAll()
       .then(setDepartments)
       .catch((error: unknown) => {
         setFeedback({
           type: 'error',
-          text: getDepartmentError(error),
+          text:
+            error instanceof Error
+              ? error.message
+              : 'An unexpected error occurred.',
         });
       })
       .finally(() => setIsLoading(false));
-  }, [api]);
+  }, [departmentApi]);
 
   useEffect(() => {
     void loadDepartments();
@@ -73,22 +54,25 @@ export function DepartmentsPage(): ReactElement {
     void loadDepartments();
   }
 
-  function openModal(next: ModalState): void {
+  function selectAction(next: PageAction): void {
     setFeedback(null);
-    setModal(next);
+    setPageAction(next);
   }
 
-  async function save(input: DepartmentInput): Promise<void> {
-    if (!modal || modal.action === 'delete' || isLoading) return;
+  async function save(input: SaveDepartmentRequest): Promise<void> {
+    if (!pageAction || pageAction.action === 'delete' || isLoading) return;
     setIsLoading(true);
     setFeedback(null);
     try {
-      if (modal.action === 'create') {
-        const created = await createDepartment(api, input);
+      if (pageAction.action === 'create') {
+        const created = await departmentApi.create(input);
         setDepartments((previous) => [created, ...previous]);
         setFeedback({ type: 'success', text: 'Department created.' });
-      } else if (modal.action === 'edit') {
-        const updated = await updateDepartment(api, modal.department.id, input);
+      } else if (pageAction.action === 'edit') {
+        const updated = await departmentApi.update(
+          pageAction.department.id,
+          input,
+        );
         setDepartments((previous) =>
           previous.map((department) =>
             department.id === updated.id ? updated : department,
@@ -96,11 +80,14 @@ export function DepartmentsPage(): ReactElement {
         );
         setFeedback({ type: 'success', text: 'Department updated.' });
       }
-      setModal(null);
+      setPageAction(null);
     } catch (error) {
       setFeedback({
         type: 'error',
-        text: getDepartmentError(error),
+        text:
+          error instanceof Error
+            ? error.message
+            : 'An unexpected error occurred.',
       });
     } finally {
       setIsLoading(false);
@@ -108,20 +95,25 @@ export function DepartmentsPage(): ReactElement {
   }
 
   async function confirmDelete(): Promise<void> {
-    if (!modal || modal.action !== 'delete' || isLoading) return;
+    if (!pageAction || pageAction.action !== 'delete' || isLoading) return;
     setIsLoading(true);
     setFeedback(null);
     try {
-      await deleteDepartment(api, modal.department.id);
+      await departmentApi.delete(pageAction.department.id);
       setDepartments((previous) =>
-        previous.filter((department) => department.id !== modal.department.id),
+        previous.filter(
+          (department) => department.id !== pageAction.department.id,
+        ),
       );
       setFeedback({ type: 'success', text: 'Department deleted.' });
-      setModal(null);
+      setPageAction(null);
     } catch (error) {
       setFeedback({
         type: 'error',
-        text: getDepartmentError(error),
+        text:
+          error instanceof Error
+            ? error.message
+            : 'An unexpected error occurred.',
       });
     } finally {
       setIsLoading(false);
@@ -149,8 +141,8 @@ export function DepartmentsPage(): ReactElement {
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => openModal({ action: 'create' })}
-          disabled={isLoading || modal !== null}
+          onClick={() => selectAction({ action: 'create' })}
+          disabled={isLoading || pageAction !== null}
         >
           <Plus size={18} aria-hidden="true" />
           Create department
@@ -161,20 +153,24 @@ export function DepartmentsPage(): ReactElement {
           <p className="alert alert-success text-sm">{feedback.text}</p>
         )}
       </div>
-      {(modal?.action === 'create' || modal?.action === 'edit') && (
+      {(pageAction?.action === 'create' || pageAction?.action === 'edit') && (
         <DepartmentForm
-          key={modal.action === 'edit' ? modal.department.id : 'create'}
-          initialValue={modal.action === 'edit' ? modal.department : undefined}
-          loading={isLoading}
+          key={
+            pageAction.action === 'edit' ? pageAction.department.id : 'create'
+          }
+          initialValue={
+            pageAction.action === 'edit' ? pageAction.department : undefined
+          }
+          isSaving={isLoading}
           error={feedback?.type === 'error' ? feedback.text : ''}
           onSave={save}
-          onCancel={() => setModal(null)}
+          onCancel={() => setPageAction(null)}
         />
       )}
       <div className="flex items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 font-semibold">
           Department directory
-          {(!isLoading || modal !== null) && departments.length > 0 && (
+          {(!isLoading || pageAction !== null) && departments.length > 0 && (
             <span className="badge badge-neutral badge-sm">
               {departments.length}
             </span>
@@ -184,13 +180,13 @@ export function DepartmentsPage(): ReactElement {
           type="button"
           className="btn btn-ghost btn-sm"
           onClick={refresh}
-          disabled={isLoading || modal !== null}
+          disabled={isLoading || pageAction !== null}
         >
           <RefreshCw size={16} aria-hidden="true" />
           Refresh
         </button>
       </div>
-      {isLoading && modal === null && (
+      {isLoading && pageAction === null && (
         <div
           role="status"
           className="flex items-center justify-center gap-3 rounded-box border border-base-300 bg-base-100 py-16 text-base-content/60"
@@ -202,7 +198,7 @@ export function DepartmentsPage(): ReactElement {
           Loading departments…
         </div>
       )}
-      {!isLoading && feedback?.type === 'error' && modal === null && (
+      {!isLoading && feedback?.type === 'error' && pageAction === null && (
         <div
           role="alert"
           className="rounded-box border border-error/30 bg-base-100 p-6"
@@ -217,29 +213,31 @@ export function DepartmentsPage(): ReactElement {
           </button>
         </div>
       )}
-      {(!isLoading || modal !== null) &&
+      {(!isLoading || pageAction !== null) &&
         (departments.length > 0 ||
           feedback?.type !== 'error' ||
-          modal !== null) && (
+          pageAction !== null) && (
           <DepartmentList
             departments={departments}
-            disabled={isLoading || modal !== null}
-            onCreate={() => openModal({ action: 'create' })}
-            onEdit={(department) => openModal({ action: 'edit', department })}
+            disabled={isLoading || pageAction !== null}
+            onCreate={() => selectAction({ action: 'create' })}
+            onEdit={(department) =>
+              selectAction({ action: 'edit', department })
+            }
             onDelete={(department) =>
-              openModal({ action: 'delete', department })
+              selectAction({ action: 'delete', department })
             }
           />
         )}
-      {modal?.action === 'delete' && (
+      {pageAction?.action === 'delete' && (
         <DeleteDepartmentDialog
-          department={modal.department}
-          loading={isLoading}
+          department={pageAction.department}
+          isDeleting={isLoading}
           error={feedback?.type === 'error' ? feedback.text : ''}
           onConfirm={() => {
             void confirmDelete();
           }}
-          onCancel={() => setModal(null)}
+          onCancel={() => setPageAction(null)}
         />
       )}
     </section>

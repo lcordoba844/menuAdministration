@@ -9,4 +9,7 @@ export interface Office {
   updatedAt: string;
 }
 
-export type OfficeInput = Pick<Office, 'name' | 'city' | 'country' | 'address'>;
+export type SaveOfficeRequest = Pick<
+  Office,
+  'name' | 'city' | 'country' | 'address'
+>;
