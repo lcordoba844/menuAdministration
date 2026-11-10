@@ -1,9 +1,16 @@
-import { ClipboardList, House, LogOut, UtensilsCrossed } from 'lucide-react';
+import {
+  Building2,
+  ClipboardList,
+  House,
+  LogOut,
+  UtensilsCrossed,
+} from 'lucide-react';
 import type { ReactElement } from 'react';
 import { Navigate, NavLink, Outlet, Route, Routes } from 'react-router';
 
 import { useAuth } from '@/auth/auth-context';
 import { LoginPage } from '@/auth/LoginPage';
+import { OfficesPage } from '@/features/offices/OfficesPage';
 
 function Placeholder({
   title,
@@ -28,7 +35,7 @@ function AuthenticatedLayout(): ReactElement {
   }
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-24 text-center">
+    <main className="mx-auto max-w-5xl px-4 py-16 text-center sm:px-6 sm:py-24">
       <Outlet />
       <nav
         aria-label="Main navigation"
@@ -62,6 +69,15 @@ function AuthenticatedLayout(): ReactElement {
           <ClipboardList size={18} aria-hidden="true" />
           Orders
         </NavLink>
+        <NavLink
+          to="/offices"
+          className={({ isActive }) =>
+            `btn ${isActive ? 'btn-primary' : 'btn-outline'}`
+          }
+        >
+          <Building2 size={18} aria-hidden="true" />
+          Offices
+        </NavLink>
         <button type="button" onClick={logout} className="btn btn-ghost">
           <LogOut size={18} aria-hidden="true" />
           Sign out
@@ -76,6 +92,7 @@ function App(): ReactElement {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route element={<AuthenticatedLayout />}>
+        <Route path="/offices" element={<OfficesPage />} />
         <Route
           path="/"
           element={
