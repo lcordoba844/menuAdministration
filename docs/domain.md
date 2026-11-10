@@ -75,15 +75,8 @@ classDiagram
     +Text description?
     +List~DietaryRestriction~ dietary_restrictions
     +Integer price_cents?
+    +Integer count?
     +Boolean is_active
-  }
-
-
-  class MenuOptionControl {
-    +ID id
-    +ID option_id
-    +Integer count
-    +List~DietaryRestriction~ dietary_restrictions?
   }
 
 
@@ -93,7 +86,7 @@ classDiagram
     +ID placed_by_user_id
     +OrderTargetKind target_kind
     +Text target_guest_name?
-    +ID target_user_id?
+    +ID target_diner_id?
     +ID menu_option_id?
     +Text comment?
     +Boolean enabled
@@ -142,14 +135,12 @@ classDiagram
   }
 
 
-
-
   User "1" --> "0..1" Diner : profile
   User --> UserRole
   User "1" --> "0..*" UserPermissionGrant : permissions
   User "1" --> "0..*" Menu : creates
   User "1" --> "0..*" Order : places
-  User "1" --> "0..*" Order : target_user
+  Diner "1" --> "0..*" Order : target_diner
   Office "1" --> "0..*" Diner : diners
   Department "1" --> "0..*" Diner : members
 
@@ -158,7 +149,6 @@ classDiagram
   Menu "1" --> "0..*" Order : orders
 
 
-  MenuOption --> MenuOptionControl
   MenuOption "1" --> "0..*" Order : selected_by
 
 
