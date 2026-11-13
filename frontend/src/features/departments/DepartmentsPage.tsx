@@ -1,17 +1,16 @@
 import { Network, Plus, RefreshCw } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 
-import { useAuth } from '@/auth/auth-context';
 import { useSnackbar } from '@/components/snackbar-context';
 import { DepartmentDeletionDialog } from '@/features/departments/components/DepartmentDeletionDialog';
 import { DepartmentEditorDialog } from '@/features/departments/components/DepartmentEditorDialog';
 import { DepartmentList } from '@/features/departments/components/DepartmentList';
-import { DepartmentApi } from '@/features/departments/department.api';
 import type {
   Department,
   SaveDepartmentRequest,
 } from '@/features/departments/department.types';
+import { useDepartmentsViewModel } from '@/features/departments/useDepartmentsViewModel';
 
 type PageAction =
   | { action: 'create' }
@@ -20,58 +19,24 @@ type PageAction =
   | null;
 
 export function DepartmentsPage(): ReactElement {
-  const { api } = useAuth();
   const { showSnackbar } = useSnackbar();
-  const departmentApi = useMemo(() => new DepartmentApi(api), [api]);
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const viewModel = useDepartmentsViewModel();
   const [pageAction, setPageAction] = useState<PageAction>(null);
-  const [hasLoadError, setHasLoadError] = useState(false);
-
-  const loadDepartments = useCallback((): Promise<void> => {
-    return departmentApi
-      .getAll()
-      .then(setDepartments)
-      .catch((error: unknown) => {
-        setHasLoadError(true);
-        showSnackbar(
-          'error',
-          error instanceof Error
-            ? error.message
-            : 'An unexpected error occurred.',
-        );
-      })
-      .finally(() => setIsLoading(false));
-  }, [departmentApi, showSnackbar]);
+  const hasLoadError = viewModel.loadError !== null;
 
   useEffect(() => {
-    void loadDepartments();
-  }, [loadDepartments]);
-
-  function refresh(): void {
-    setHasLoadError(false);
-    setIsLoading(true);
-    void loadDepartments();
-  }
+    if (viewModel.loadError) showSnackbar('error', viewModel.loadError.message);
+  }, [viewModel.loadError, showSnackbar]);
 
   async function save(input: SaveDepartmentRequest): Promise<void> {
-    if (!pageAction || pageAction.action === 'delete' || isLoading) return;
-    setIsLoading(true);
+    if (!pageAction || pageAction.action === 'delete' || viewModel.isLoading)
+      return;
     try {
       if (pageAction.action === 'create') {
-        const created = await departmentApi.create(input);
-        setDepartments((previous) => [created, ...previous]);
+        await viewModel.createDepartment(input);
         showSnackbar('success', 'Department created.');
       } else if (pageAction.action === 'edit') {
-        const updated = await departmentApi.update(
-          pageAction.department.id,
-          input,
-        );
-        setDepartments((previous) =>
-          previous.map((department) =>
-            department.id === updated.id ? updated : department,
-          ),
-        );
+        await viewModel.updateDepartment(pageAction.department.id, input);
         showSnackbar('success', 'Department updated.');
       }
       setPageAction(null);
@@ -82,21 +47,14 @@ export function DepartmentsPage(): ReactElement {
           ? error.message
           : 'An unexpected error occurred.',
       );
-    } finally {
-      setIsLoading(false);
     }
   }
 
   async function confirmDelete(): Promise<void> {
-    if (!pageAction || pageAction.action !== 'delete' || isLoading) return;
-    setIsLoading(true);
+    if (!pageAction || pageAction.action !== 'delete' || viewModel.isLoading)
+      return;
     try {
-      await departmentApi.delete(pageAction.department.id);
-      setDepartments((previous) =>
-        previous.filter(
-          (department) => department.id !== pageAction.department.id,
-        ),
-      );
+      await viewModel.deleteDepartment(pageAction.department.id);
       showSnackbar('success', 'Department deleted.');
       setPageAction(null);
     } catch (error) {
@@ -106,8 +64,6 @@ export function DepartmentsPage(): ReactElement {
           ? error.message
           : 'An unexpected error occurred.',
       );
-    } finally {
-      setIsLoading(false);
     }
   }
 
@@ -133,7 +89,7 @@ export function DepartmentsPage(): ReactElement {
           type="button"
           className="btn btn-primary"
           onClick={() => setPageAction({ action: 'create' })}
-          disabled={isLoading || pageAction !== null}
+          disabled={viewModel.isLoading || pageAction !== null}
         >
           <Plus size={18} aria-hidden="true" />
           Create department
@@ -142,23 +98,24 @@ export function DepartmentsPage(): ReactElement {
       <div className="flex items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 font-semibold">
           Department directory
-          {(!isLoading || pageAction !== null) && departments.length > 0 && (
-            <span className="badge badge-neutral badge-sm">
-              {departments.length}
-            </span>
-          )}
+          {(!viewModel.isLoading || pageAction !== null) &&
+            viewModel.departments.length > 0 && (
+              <span className="badge badge-neutral badge-sm">
+                {viewModel.departments.length}
+              </span>
+            )}
         </h2>
         <button
           type="button"
           className="btn btn-ghost btn-sm"
-          onClick={refresh}
-          disabled={isLoading || pageAction !== null}
+          onClick={viewModel.refresh}
+          disabled={viewModel.isLoading || pageAction !== null}
         >
           <RefreshCw size={16} aria-hidden="true" />
           Refresh
         </button>
       </div>
-      {isLoading && pageAction === null && (
+      {viewModel.isLoading && pageAction === null && (
         <div
           role="status"
           className="flex items-center justify-center gap-3 rounded-box border border-base-300 bg-base-100 py-16 text-base-content/60"
@@ -170,7 +127,7 @@ export function DepartmentsPage(): ReactElement {
           Loading departments…
         </div>
       )}
-      {!isLoading && hasLoadError && pageAction === null && (
+      {!viewModel.isLoading && hasLoadError && pageAction === null && (
         <div
           role="alert"
           className="rounded-box border border-error/30 bg-base-100 p-6"
@@ -181,17 +138,19 @@ export function DepartmentsPage(): ReactElement {
           <button
             type="button"
             className="btn btn-outline btn-sm mt-4"
-            onClick={refresh}
+            onClick={viewModel.refresh}
           >
             Try again
           </button>
         </div>
       )}
-      {(!isLoading || pageAction !== null) &&
-        (departments.length > 0 || !hasLoadError || pageAction !== null) && (
+      {(!viewModel.isLoading || pageAction !== null) &&
+        (viewModel.departments.length > 0 ||
+          !hasLoadError ||
+          pageAction !== null) && (
           <DepartmentList
-            departments={departments}
-            disabled={isLoading || pageAction !== null}
+            departments={viewModel.departments}
+            disabled={viewModel.isLoading || pageAction !== null}
             onCreate={() => setPageAction({ action: 'create' })}
             onEdit={(department) =>
               setPageAction({ action: 'edit', department })
@@ -213,7 +172,7 @@ export function DepartmentsPage(): ReactElement {
         department={
           pageAction?.action === 'edit' ? pageAction.department : undefined
         }
-        isSaving={isLoading}
+        isSaving={viewModel.isLoading}
         onSave={save}
         onClose={() => setPageAction(null)}
       />
@@ -222,7 +181,7 @@ export function DepartmentsPage(): ReactElement {
         department={
           pageAction?.action === 'delete' ? pageAction.department : undefined
         }
-        isDeleting={isLoading}
+        isDeleting={viewModel.isLoading}
         onConfirm={() => {
           void confirmDelete();
         }}

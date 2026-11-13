@@ -1,17 +1,16 @@
 import { Building2, Plus, RefreshCw } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
 
-import { useAuth } from '@/auth/auth-context';
 import { useSnackbar } from '@/components/snackbar-context';
 import { OfficeDeletionDialog } from '@/features/offices/components/OfficeDeletionDialog';
 import { OfficeEditorDialog } from '@/features/offices/components/OfficeEditorDialog';
 import { OfficeList } from '@/features/offices/components/OfficeList';
-import { OfficeApi } from '@/features/offices/office.api';
 import type {
   Office,
   SaveOfficeRequest,
 } from '@/features/offices/office.types';
+import { useOfficesViewModel } from '@/features/offices/useOfficesViewModel';
 
 type PageAction =
   | { action: 'create' }
@@ -20,55 +19,24 @@ type PageAction =
   | null;
 
 export function OfficesPage(): ReactElement {
-  const { api } = useAuth();
   const { showSnackbar } = useSnackbar();
-  const officeApi = useMemo(() => new OfficeApi(api), [api]);
-  const [offices, setOffices] = useState<Office[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const viewModel = useOfficesViewModel();
   const [pageAction, setPageAction] = useState<PageAction>(null);
-  const [hasLoadError, setHasLoadError] = useState(false);
-
-  const loadOffices = useCallback((): Promise<void> => {
-    return officeApi
-      .getAll()
-      .then(setOffices)
-      .catch((error: unknown) => {
-        setHasLoadError(true);
-        showSnackbar(
-          'error',
-          error instanceof Error
-            ? error.message
-            : 'An unexpected error occurred.',
-        );
-      })
-      .finally(() => setIsLoading(false));
-  }, [officeApi, showSnackbar]);
+  const hasLoadError = viewModel.loadError !== null;
 
   useEffect(() => {
-    void loadOffices();
-  }, [loadOffices]);
-
-  function refresh(): void {
-    setHasLoadError(false);
-    setIsLoading(true);
-    void loadOffices();
-  }
+    if (viewModel.loadError) showSnackbar('error', viewModel.loadError.message);
+  }, [viewModel.loadError, showSnackbar]);
 
   async function save(input: SaveOfficeRequest): Promise<void> {
-    if (!pageAction || pageAction.action === 'delete' || isLoading) return;
-    setIsLoading(true);
+    if (!pageAction || pageAction.action === 'delete' || viewModel.isLoading)
+      return;
     try {
       if (pageAction.action === 'create') {
-        const created = await officeApi.create(input);
-        setOffices((previous) => [created, ...previous]);
+        await viewModel.createOffice(input);
         showSnackbar('success', 'Office created.');
       } else if (pageAction.action === 'edit') {
-        const updated = await officeApi.update(pageAction.office.id, input);
-        setOffices((previous) =>
-          previous.map((office) =>
-            office.id === updated.id ? updated : office,
-          ),
-        );
+        await viewModel.updateOffice(pageAction.office.id, input);
         showSnackbar('success', 'Office updated.');
       }
       setPageAction(null);
@@ -79,19 +47,14 @@ export function OfficesPage(): ReactElement {
           ? error.message
           : 'An unexpected error occurred.',
       );
-    } finally {
-      setIsLoading(false);
     }
   }
 
   async function confirmDelete(): Promise<void> {
-    if (!pageAction || pageAction.action !== 'delete' || isLoading) return;
-    setIsLoading(true);
+    if (!pageAction || pageAction.action !== 'delete' || viewModel.isLoading)
+      return;
     try {
-      await officeApi.delete(pageAction.office.id);
-      setOffices((previous) =>
-        previous.filter((office) => office.id !== pageAction.office.id),
-      );
+      await viewModel.deleteOffice(pageAction.office.id);
       showSnackbar('success', 'Office deleted.');
       setPageAction(null);
     } catch (error) {
@@ -101,8 +64,6 @@ export function OfficesPage(): ReactElement {
           ? error.message
           : 'An unexpected error occurred.',
       );
-    } finally {
-      setIsLoading(false);
     }
   }
 
@@ -125,7 +86,7 @@ export function OfficesPage(): ReactElement {
           type="button"
           className="btn btn-primary"
           onClick={() => setPageAction({ action: 'create' })}
-          disabled={isLoading || pageAction !== null}
+          disabled={viewModel.isLoading || pageAction !== null}
         >
           <Plus size={18} aria-hidden="true" />
           Create office
@@ -134,23 +95,24 @@ export function OfficesPage(): ReactElement {
       <div className="flex items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 font-semibold">
           Office directory
-          {(!isLoading || pageAction !== null) && offices.length > 0 && (
-            <span className="badge badge-neutral badge-sm">
-              {offices.length}
-            </span>
-          )}
+          {(!viewModel.isLoading || pageAction !== null) &&
+            viewModel.offices.length > 0 && (
+              <span className="badge badge-neutral badge-sm">
+                {viewModel.offices.length}
+              </span>
+            )}
         </h2>
         <button
           type="button"
           className="btn btn-ghost btn-sm"
-          onClick={refresh}
-          disabled={isLoading || pageAction !== null}
+          onClick={viewModel.refresh}
+          disabled={viewModel.isLoading || pageAction !== null}
         >
           <RefreshCw size={16} aria-hidden="true" />
           Refresh
         </button>
       </div>
-      {isLoading && pageAction === null && (
+      {viewModel.isLoading && pageAction === null && (
         <div
           role="status"
           className="flex items-center justify-center gap-3 rounded-box border border-base-300 bg-base-100 py-16 text-base-content/60"
@@ -162,7 +124,7 @@ export function OfficesPage(): ReactElement {
           Loading offices…
         </div>
       )}
-      {!isLoading && hasLoadError && pageAction === null && (
+      {!viewModel.isLoading && hasLoadError && pageAction === null && (
         <div
           role="alert"
           className="rounded-box border border-error/30 bg-base-100 p-6"
@@ -173,17 +135,19 @@ export function OfficesPage(): ReactElement {
           <button
             type="button"
             className="btn btn-outline btn-sm mt-4"
-            onClick={refresh}
+            onClick={viewModel.refresh}
           >
             Try again
           </button>
         </div>
       )}
-      {(!isLoading || pageAction !== null) &&
-        (offices.length > 0 || !hasLoadError || pageAction !== null) && (
+      {(!viewModel.isLoading || pageAction !== null) &&
+        (viewModel.offices.length > 0 ||
+          !hasLoadError ||
+          pageAction !== null) && (
           <OfficeList
-            offices={offices}
-            disabled={isLoading || pageAction !== null}
+            offices={viewModel.offices}
+            disabled={viewModel.isLoading || pageAction !== null}
             onCreate={() => setPageAction({ action: 'create' })}
             onEdit={(office) => setPageAction({ action: 'edit', office })}
             onDelete={(office) => setPageAction({ action: 'delete', office })}
@@ -199,14 +163,14 @@ export function OfficesPage(): ReactElement {
           pageAction?.action === 'create' || pageAction?.action === 'edit'
         }
         office={pageAction?.action === 'edit' ? pageAction.office : undefined}
-        isSaving={isLoading}
+        isSaving={viewModel.isLoading}
         onSave={save}
         onClose={() => setPageAction(null)}
       />
       <OfficeDeletionDialog
         isOpen={pageAction?.action === 'delete'}
         office={pageAction?.action === 'delete' ? pageAction.office : undefined}
-        isDeleting={isLoading}
+        isDeleting={viewModel.isLoading}
         onConfirm={() => {
           void confirmDelete();
         }}
