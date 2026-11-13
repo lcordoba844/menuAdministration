@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
 
 import { useAuth } from '@/auth/auth-context';
+import { useSnackbar } from '@/components/snackbar-context';
 import { DeleteDepartmentDialog } from '@/features/departments/components/DeleteDepartmentDialog';
 import { DepartmentForm } from '@/features/departments/components/DepartmentForm';
 import { DepartmentList } from '@/features/departments/components/DepartmentList';
@@ -18,56 +19,53 @@ type PageAction =
   | { action: 'delete'; department: Department }
   | null;
 
-type FeedbackState = { type: 'success' | 'error'; text: string } | null;
-
 export function DepartmentsPage(): ReactElement {
   const { api } = useAuth();
+  const { showSnackbar } = useSnackbar();
   const departmentApi = useMemo(() => new DepartmentApi(api), [api]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pageAction, setPageAction] = useState<PageAction>(null);
-  const [feedback, setFeedback] = useState<FeedbackState>(null);
+  const [hasLoadError, setHasLoadError] = useState(false);
 
   const loadDepartments = useCallback((): Promise<void> => {
     return departmentApi
       .getAll()
       .then(setDepartments)
       .catch((error: unknown) => {
-        setFeedback({
-          type: 'error',
-          text:
-            error instanceof Error
-              ? error.message
-              : 'An unexpected error occurred.',
-        });
+        setHasLoadError(true);
+        showSnackbar(
+          'error',
+          error instanceof Error
+            ? error.message
+            : 'An unexpected error occurred.',
+        );
       })
       .finally(() => setIsLoading(false));
-  }, [departmentApi]);
+  }, [departmentApi, showSnackbar]);
 
   useEffect(() => {
     void loadDepartments();
   }, [loadDepartments]);
 
   function refresh(): void {
+    setHasLoadError(false);
     setIsLoading(true);
-    setFeedback(null);
     void loadDepartments();
   }
 
   function selectAction(next: PageAction): void {
-    setFeedback(null);
     setPageAction(next);
   }
 
   async function save(input: SaveDepartmentRequest): Promise<void> {
     if (!pageAction || pageAction.action === 'delete' || isLoading) return;
     setIsLoading(true);
-    setFeedback(null);
     try {
       if (pageAction.action === 'create') {
         const created = await departmentApi.create(input);
         setDepartments((previous) => [created, ...previous]);
-        setFeedback({ type: 'success', text: 'Department created.' });
+        showSnackbar('success', 'Department created.');
       } else if (pageAction.action === 'edit') {
         const updated = await departmentApi.update(
           pageAction.department.id,
@@ -78,17 +76,16 @@ export function DepartmentsPage(): ReactElement {
             department.id === updated.id ? updated : department,
           ),
         );
-        setFeedback({ type: 'success', text: 'Department updated.' });
+        showSnackbar('success', 'Department updated.');
       }
       setPageAction(null);
     } catch (error) {
-      setFeedback({
-        type: 'error',
-        text:
-          error instanceof Error
-            ? error.message
-            : 'An unexpected error occurred.',
-      });
+      showSnackbar(
+        'error',
+        error instanceof Error
+          ? error.message
+          : 'An unexpected error occurred.',
+      );
     } finally {
       setIsLoading(false);
     }
@@ -97,7 +94,6 @@ export function DepartmentsPage(): ReactElement {
   async function confirmDelete(): Promise<void> {
     if (!pageAction || pageAction.action !== 'delete' || isLoading) return;
     setIsLoading(true);
-    setFeedback(null);
     try {
       await departmentApi.delete(pageAction.department.id);
       setDepartments((previous) =>
@@ -105,16 +101,15 @@ export function DepartmentsPage(): ReactElement {
           (department) => department.id !== pageAction.department.id,
         ),
       );
-      setFeedback({ type: 'success', text: 'Department deleted.' });
+      showSnackbar('success', 'Department deleted.');
       setPageAction(null);
     } catch (error) {
-      setFeedback({
-        type: 'error',
-        text:
-          error instanceof Error
-            ? error.message
-            : 'An unexpected error occurred.',
-      });
+      showSnackbar(
+        'error',
+        error instanceof Error
+          ? error.message
+          : 'An unexpected error occurred.',
+      );
     } finally {
       setIsLoading(false);
     }
@@ -148,11 +143,6 @@ export function DepartmentsPage(): ReactElement {
           Create department
         </button>
       </header>
-      <div role="status" aria-live="polite">
-        {feedback?.type === 'success' && (
-          <p className="alert alert-success text-sm">{feedback.text}</p>
-        )}
-      </div>
       {(pageAction?.action === 'create' || pageAction?.action === 'edit') && (
         <DepartmentForm
           key={
@@ -162,7 +152,6 @@ export function DepartmentsPage(): ReactElement {
             pageAction.action === 'edit' ? pageAction.department : undefined
           }
           isSaving={isLoading}
-          error={feedback?.type === 'error' ? feedback.text : ''}
           onSave={save}
           onCancel={() => setPageAction(null)}
         />
@@ -198,12 +187,14 @@ export function DepartmentsPage(): ReactElement {
           Loading departments…
         </div>
       )}
-      {!isLoading && feedback?.type === 'error' && pageAction === null && (
+      {!isLoading && hasLoadError && pageAction === null && (
         <div
           role="alert"
           className="rounded-box border border-error/30 bg-base-100 p-6"
         >
-          <p className="text-error">{feedback.text}</p>
+          <p className="text-error">
+            Unable to load departments. Please try again.
+          </p>
           <button
             type="button"
             className="btn btn-outline btn-sm mt-4"
@@ -214,9 +205,7 @@ export function DepartmentsPage(): ReactElement {
         </div>
       )}
       {(!isLoading || pageAction !== null) &&
-        (departments.length > 0 ||
-          feedback?.type !== 'error' ||
-          pageAction !== null) && (
+        (departments.length > 0 || !hasLoadError || pageAction !== null) && (
           <DepartmentList
             departments={departments}
             disabled={isLoading || pageAction !== null}
@@ -233,7 +222,6 @@ export function DepartmentsPage(): ReactElement {
         <DeleteDepartmentDialog
           department={pageAction.department}
           isDeleting={isLoading}
-          error={feedback?.type === 'error' ? feedback.text : ''}
           onConfirm={() => {
             void confirmDelete();
           }}

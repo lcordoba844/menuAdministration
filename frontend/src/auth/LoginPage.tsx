@@ -4,13 +4,14 @@ import type { ReactElement, SubmitEvent } from 'react';
 import { Navigate } from 'react-router';
 
 import { useAuth } from '@/auth/auth-context';
+import { useSnackbar } from '@/components/snackbar-context';
 
 export function LoginPage(): ReactElement {
   const { status, login } = useAuth();
+  const { showSnackbar } = useSnackbar();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState('');
 
   if (status === 'authenticated') return <Navigate to="/" replace />;
 
@@ -18,12 +19,12 @@ export function LoginPage(): ReactElement {
     event.preventDefault();
     if (pending) return;
     setPending(true);
-    setError('');
     try {
       await login(email.trim(), password);
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        setError(
+        showSnackbar(
+          'error',
           error.response?.status === 401
             ? 'Invalid credentials.'
             : error.response?.status === 400
@@ -31,7 +32,8 @@ export function LoginPage(): ReactElement {
               : 'Unable to sign in. Please try again.',
         );
       } else {
-        setError(
+        showSnackbar(
+          'error',
           error instanceof Error
             ? error.message
             : 'Unable to sign in. Please try again.',
@@ -88,11 +90,6 @@ export function LoginPage(): ReactElement {
                 disabled={pending}
               />
             </div>
-            {error && (
-              <p role="alert" className="text-sm text-error">
-                {error}
-              </p>
-            )}
             <button
               type="submit"
               className="btn btn-primary mt-2"

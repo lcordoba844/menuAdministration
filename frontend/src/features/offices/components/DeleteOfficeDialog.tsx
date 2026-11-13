@@ -2,12 +2,12 @@ import { Trash2 } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import type { ReactElement } from 'react';
 
+import { useSnackbar } from '@/components/snackbar-context';
 import type { Office } from '@/features/offices/office.types';
 
 interface DeleteOfficeDialogProps {
   office: Office;
   isDeleting: boolean;
-  error: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -15,17 +15,21 @@ interface DeleteOfficeDialogProps {
 export function DeleteOfficeDialog({
   office,
   isDeleting,
-  error,
   onConfirm,
   onCancel,
 }: DeleteOfficeDialogProps): ReactElement {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const { setSnackbarContainer } = useSnackbar();
 
   useEffect(() => {
     const dialog = dialogRef.current;
     dialog?.showModal();
-    return (): void => dialog?.close();
-  }, []);
+    setSnackbarContainer(dialog);
+    return (): void => {
+      setSnackbarContainer(null);
+      dialog?.close();
+    };
+  }, [setSnackbarContainer]);
 
   return (
     <dialog
@@ -48,11 +52,6 @@ export function DeleteOfficeDialog({
         <p id="delete-office-description" className="mt-3 text-base-content/70">
           This office will no longer be available for new diner profiles.
         </p>
-        {error && (
-          <p role="alert" className="mt-4 text-sm text-error">
-            {error}
-          </p>
-        )}
         <div className="modal-action">
           <button
             type="button"

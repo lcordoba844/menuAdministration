@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
 
 import { useAuth } from '@/auth/auth-context';
+import { useSnackbar } from '@/components/snackbar-context';
 import { DeleteOfficeDialog } from '@/features/offices/components/DeleteOfficeDialog';
 import { OfficeForm } from '@/features/offices/components/OfficeForm';
 import { OfficeList } from '@/features/offices/components/OfficeList';
@@ -18,56 +19,53 @@ type PageAction =
   | { action: 'delete'; office: Office }
   | null;
 
-type FeedbackState = { type: 'success' | 'error'; text: string } | null;
-
 export function OfficesPage(): ReactElement {
   const { api } = useAuth();
+  const { showSnackbar } = useSnackbar();
   const officeApi = useMemo(() => new OfficeApi(api), [api]);
   const [offices, setOffices] = useState<Office[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pageAction, setPageAction] = useState<PageAction>(null);
-  const [feedback, setFeedback] = useState<FeedbackState>(null);
+  const [hasLoadError, setHasLoadError] = useState(false);
 
   const loadOffices = useCallback((): Promise<void> => {
     return officeApi
       .getAll()
       .then(setOffices)
       .catch((error: unknown) => {
-        setFeedback({
-          type: 'error',
-          text:
-            error instanceof Error
-              ? error.message
-              : 'An unexpected error occurred.',
-        });
+        setHasLoadError(true);
+        showSnackbar(
+          'error',
+          error instanceof Error
+            ? error.message
+            : 'An unexpected error occurred.',
+        );
       })
       .finally(() => setIsLoading(false));
-  }, [officeApi]);
+  }, [officeApi, showSnackbar]);
 
   useEffect(() => {
     void loadOffices();
   }, [loadOffices]);
 
   function refresh(): void {
+    setHasLoadError(false);
     setIsLoading(true);
-    setFeedback(null);
     void loadOffices();
   }
 
   function selectAction(next: PageAction): void {
-    setFeedback(null);
     setPageAction(next);
   }
 
   async function save(input: SaveOfficeRequest): Promise<void> {
     if (!pageAction || pageAction.action === 'delete' || isLoading) return;
     setIsLoading(true);
-    setFeedback(null);
     try {
       if (pageAction.action === 'create') {
         const created = await officeApi.create(input);
         setOffices((previous) => [created, ...previous]);
-        setFeedback({ type: 'success', text: 'Office created.' });
+        showSnackbar('success', 'Office created.');
       } else if (pageAction.action === 'edit') {
         const updated = await officeApi.update(pageAction.office.id, input);
         setOffices((previous) =>
@@ -75,17 +73,16 @@ export function OfficesPage(): ReactElement {
             office.id === updated.id ? updated : office,
           ),
         );
-        setFeedback({ type: 'success', text: 'Office updated.' });
+        showSnackbar('success', 'Office updated.');
       }
       setPageAction(null);
     } catch (error) {
-      setFeedback({
-        type: 'error',
-        text:
-          error instanceof Error
-            ? error.message
-            : 'An unexpected error occurred.',
-      });
+      showSnackbar(
+        'error',
+        error instanceof Error
+          ? error.message
+          : 'An unexpected error occurred.',
+      );
     } finally {
       setIsLoading(false);
     }
@@ -94,22 +91,20 @@ export function OfficesPage(): ReactElement {
   async function confirmDelete(): Promise<void> {
     if (!pageAction || pageAction.action !== 'delete' || isLoading) return;
     setIsLoading(true);
-    setFeedback(null);
     try {
       await officeApi.delete(pageAction.office.id);
       setOffices((previous) =>
         previous.filter((office) => office.id !== pageAction.office.id),
       );
-      setFeedback({ type: 'success', text: 'Office deleted.' });
+      showSnackbar('success', 'Office deleted.');
       setPageAction(null);
     } catch (error) {
-      setFeedback({
-        type: 'error',
-        text:
-          error instanceof Error
-            ? error.message
-            : 'An unexpected error occurred.',
-      });
+      showSnackbar(
+        'error',
+        error instanceof Error
+          ? error.message
+          : 'An unexpected error occurred.',
+      );
     } finally {
       setIsLoading(false);
     }
@@ -140,11 +135,6 @@ export function OfficesPage(): ReactElement {
           Create office
         </button>
       </header>
-      <div role="status" aria-live="polite">
-        {feedback?.type === 'success' && (
-          <p className="alert alert-success text-sm">{feedback.text}</p>
-        )}
-      </div>
       {(pageAction?.action === 'create' || pageAction?.action === 'edit') && (
         <OfficeForm
           key={pageAction.action === 'edit' ? pageAction.office.id : 'create'}
@@ -152,7 +142,6 @@ export function OfficesPage(): ReactElement {
             pageAction.action === 'edit' ? pageAction.office : undefined
           }
           isSaving={isLoading}
-          error={feedback?.type === 'error' ? feedback.text : ''}
           onSave={save}
           onCancel={() => setPageAction(null)}
         />
@@ -188,12 +177,14 @@ export function OfficesPage(): ReactElement {
           Loading offices…
         </div>
       )}
-      {!isLoading && feedback?.type === 'error' && pageAction === null && (
+      {!isLoading && hasLoadError && pageAction === null && (
         <div
           role="alert"
           className="rounded-box border border-error/30 bg-base-100 p-6"
         >
-          <p className="text-error">{feedback.text}</p>
+          <p className="text-error">
+            Unable to load offices. Please try again.
+          </p>
           <button
             type="button"
             className="btn btn-outline btn-sm mt-4"
@@ -204,9 +195,7 @@ export function OfficesPage(): ReactElement {
         </div>
       )}
       {(!isLoading || pageAction !== null) &&
-        (offices.length > 0 ||
-          feedback?.type !== 'error' ||
-          pageAction !== null) && (
+        (offices.length > 0 || !hasLoadError || pageAction !== null) && (
           <OfficeList
             offices={offices}
             disabled={isLoading || pageAction !== null}
@@ -219,7 +208,6 @@ export function OfficesPage(): ReactElement {
         <DeleteOfficeDialog
           office={pageAction.office}
           isDeleting={isLoading}
-          error={feedback?.type === 'error' ? feedback.text : ''}
           onConfirm={() => {
             void confirmDelete();
           }}

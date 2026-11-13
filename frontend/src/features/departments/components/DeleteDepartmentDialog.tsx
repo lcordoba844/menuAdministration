@@ -2,12 +2,12 @@ import { Trash2 } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import type { ReactElement } from 'react';
 
+import { useSnackbar } from '@/components/snackbar-context';
 import type { Department } from '@/features/departments/department.types';
 
 interface DeleteDepartmentDialogProps {
   department: Department;
   isDeleting: boolean;
-  error: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -15,17 +15,21 @@ interface DeleteDepartmentDialogProps {
 export function DeleteDepartmentDialog({
   department,
   isDeleting,
-  error,
   onConfirm,
   onCancel,
 }: DeleteDepartmentDialogProps): ReactElement {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const { setSnackbarContainer } = useSnackbar();
 
   useEffect(() => {
     const dialog = dialogRef.current;
     dialog?.showModal();
-    return (): void => dialog?.close();
-  }, []);
+    setSnackbarContainer(dialog);
+    return (): void => {
+      setSnackbarContainer(null);
+      dialog?.close();
+    };
+  }, [setSnackbarContainer]);
 
   return (
     <dialog
@@ -51,11 +55,6 @@ export function DeleteDepartmentDialog({
         >
           This department will no longer be available for new diner profiles.
         </p>
-        {error && (
-          <p role="alert" className="mt-4 text-sm text-error">
-            {error}
-          </p>
-        )}
         <div className="modal-action">
           <button
             type="button"

@@ -7,7 +7,6 @@ import type { SaveDepartmentRequest } from '@/features/departments/department.ty
 interface DepartmentFormProps {
   initialValue?: SaveDepartmentRequest;
   isSaving: boolean;
-  error: string;
   onSave: (input: SaveDepartmentRequest) => Promise<void>;
   onCancel: () => void;
 }
@@ -15,7 +14,6 @@ interface DepartmentFormProps {
 export function DepartmentForm({
   initialValue,
   isSaving,
-  error,
   onSave,
   onCancel,
 }: DepartmentFormProps): ReactElement {
@@ -110,9 +108,9 @@ export function DepartmentForm({
               />
             </div>
           </fieldset>
-          {(validationError || error) && (
+          {validationError && (
             <p role="alert" className="mt-4 text-sm text-error">
-              {validationError || error}
+              {validationError}
             </p>
           )}
           <div className="mt-5 flex flex-wrap justify-end gap-2">

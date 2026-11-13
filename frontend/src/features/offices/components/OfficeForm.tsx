@@ -7,7 +7,6 @@ import type { SaveOfficeRequest } from '@/features/offices/office.types';
 interface OfficeFormProps {
   initialValue?: SaveOfficeRequest;
   isSaving: boolean;
-  error: string;
   onSave: (input: SaveOfficeRequest) => Promise<void>;
   onCancel: () => void;
 }
@@ -42,7 +41,6 @@ const fields = [
 export function OfficeForm({
   initialValue,
   isSaving,
-  error,
   onSave,
   onCancel,
 }: OfficeFormProps): ReactElement {
@@ -128,9 +126,9 @@ export function OfficeForm({
               </div>
             ))}
           </fieldset>
-          {(validationError || error) && (
+          {validationError && (
             <p role="alert" className="mt-4 text-sm text-error">
-              {validationError || error}
+              {validationError}
             </p>
           )}
           <div className="mt-5 flex flex-wrap justify-end gap-2">
