@@ -9,3 +9,16 @@ body {
   min-width: 320px;
   min-height: 100dvh;
 }
+
+.snackbar-dismissing {
+  animation: snackbar-fade-out 200ms ease-out forwards;
+}
+
+@keyframes snackbar-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}

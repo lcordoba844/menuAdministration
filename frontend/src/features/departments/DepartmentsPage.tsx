@@ -4,8 +4,8 @@ import type { ReactElement } from 'react';
 
 import { useAuth } from '@/auth/auth-context';
 import { useSnackbar } from '@/components/snackbar-context';
-import { DeleteDepartmentDialog } from '@/features/departments/components/DeleteDepartmentDialog';
-import { DepartmentForm } from '@/features/departments/components/DepartmentForm';
+import { DepartmentDeletionDialog } from '@/features/departments/components/DepartmentDeletionDialog';
+import { DepartmentEditorDialog } from '@/features/departments/components/DepartmentEditorDialog';
 import { DepartmentList } from '@/features/departments/components/DepartmentList';
 import { DepartmentApi } from '@/features/departments/department.api';
 import type {
@@ -52,10 +52,6 @@ export function DepartmentsPage(): ReactElement {
     setHasLoadError(false);
     setIsLoading(true);
     void loadDepartments();
-  }
-
-  function selectAction(next: PageAction): void {
-    setPageAction(next);
   }
 
   async function save(input: SaveDepartmentRequest): Promise<void> {
@@ -136,26 +132,13 @@ export function DepartmentsPage(): ReactElement {
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => selectAction({ action: 'create' })}
+          onClick={() => setPageAction({ action: 'create' })}
           disabled={isLoading || pageAction !== null}
         >
           <Plus size={18} aria-hidden="true" />
           Create department
         </button>
       </header>
-      {(pageAction?.action === 'create' || pageAction?.action === 'edit') && (
-        <DepartmentForm
-          key={
-            pageAction.action === 'edit' ? pageAction.department.id : 'create'
-          }
-          initialValue={
-            pageAction.action === 'edit' ? pageAction.department : undefined
-          }
-          isSaving={isLoading}
-          onSave={save}
-          onCancel={() => setPageAction(null)}
-        />
-      )}
       <div className="flex items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 font-semibold">
           Department directory
@@ -209,25 +192,42 @@ export function DepartmentsPage(): ReactElement {
           <DepartmentList
             departments={departments}
             disabled={isLoading || pageAction !== null}
-            onCreate={() => selectAction({ action: 'create' })}
+            onCreate={() => setPageAction({ action: 'create' })}
             onEdit={(department) =>
-              selectAction({ action: 'edit', department })
+              setPageAction({ action: 'edit', department })
             }
             onDelete={(department) =>
-              selectAction({ action: 'delete', department })
+              setPageAction({ action: 'delete', department })
             }
           />
         )}
-      {pageAction?.action === 'delete' && (
-        <DeleteDepartmentDialog
-          department={pageAction.department}
-          isDeleting={isLoading}
-          onConfirm={() => {
-            void confirmDelete();
-          }}
-          onCancel={() => setPageAction(null)}
-        />
-      )}
+      <DepartmentEditorDialog
+        key={
+          pageAction?.action === 'edit'
+            ? pageAction.department.id
+            : (pageAction?.action ?? 'closed')
+        }
+        isOpen={
+          pageAction?.action === 'create' || pageAction?.action === 'edit'
+        }
+        department={
+          pageAction?.action === 'edit' ? pageAction.department : undefined
+        }
+        isSaving={isLoading}
+        onSave={save}
+        onClose={() => setPageAction(null)}
+      />
+      <DepartmentDeletionDialog
+        isOpen={pageAction?.action === 'delete'}
+        department={
+          pageAction?.action === 'delete' ? pageAction.department : undefined
+        }
+        isDeleting={isLoading}
+        onConfirm={() => {
+          void confirmDelete();
+        }}
+        onClose={() => setPageAction(null)}
+      />
     </section>
   );
 }

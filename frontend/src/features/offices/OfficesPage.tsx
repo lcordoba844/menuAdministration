@@ -4,8 +4,8 @@ import type { ReactElement } from 'react';
 
 import { useAuth } from '@/auth/auth-context';
 import { useSnackbar } from '@/components/snackbar-context';
-import { DeleteOfficeDialog } from '@/features/offices/components/DeleteOfficeDialog';
-import { OfficeForm } from '@/features/offices/components/OfficeForm';
+import { OfficeDeletionDialog } from '@/features/offices/components/OfficeDeletionDialog';
+import { OfficeEditorDialog } from '@/features/offices/components/OfficeEditorDialog';
 import { OfficeList } from '@/features/offices/components/OfficeList';
 import { OfficeApi } from '@/features/offices/office.api';
 import type {
@@ -52,10 +52,6 @@ export function OfficesPage(): ReactElement {
     setHasLoadError(false);
     setIsLoading(true);
     void loadOffices();
-  }
-
-  function selectAction(next: PageAction): void {
-    setPageAction(next);
   }
 
   async function save(input: SaveOfficeRequest): Promise<void> {
@@ -128,24 +124,13 @@ export function OfficesPage(): ReactElement {
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => selectAction({ action: 'create' })}
+          onClick={() => setPageAction({ action: 'create' })}
           disabled={isLoading || pageAction !== null}
         >
           <Plus size={18} aria-hidden="true" />
           Create office
         </button>
       </header>
-      {(pageAction?.action === 'create' || pageAction?.action === 'edit') && (
-        <OfficeForm
-          key={pageAction.action === 'edit' ? pageAction.office.id : 'create'}
-          initialValue={
-            pageAction.action === 'edit' ? pageAction.office : undefined
-          }
-          isSaving={isLoading}
-          onSave={save}
-          onCancel={() => setPageAction(null)}
-        />
-      )}
       <div className="flex items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 font-semibold">
           Office directory
@@ -199,21 +184,34 @@ export function OfficesPage(): ReactElement {
           <OfficeList
             offices={offices}
             disabled={isLoading || pageAction !== null}
-            onCreate={() => selectAction({ action: 'create' })}
-            onEdit={(office) => selectAction({ action: 'edit', office })}
-            onDelete={(office) => selectAction({ action: 'delete', office })}
+            onCreate={() => setPageAction({ action: 'create' })}
+            onEdit={(office) => setPageAction({ action: 'edit', office })}
+            onDelete={(office) => setPageAction({ action: 'delete', office })}
           />
         )}
-      {pageAction?.action === 'delete' && (
-        <DeleteOfficeDialog
-          office={pageAction.office}
-          isDeleting={isLoading}
-          onConfirm={() => {
-            void confirmDelete();
-          }}
-          onCancel={() => setPageAction(null)}
-        />
-      )}
+      <OfficeEditorDialog
+        key={
+          pageAction?.action === 'edit'
+            ? pageAction.office.id
+            : (pageAction?.action ?? 'closed')
+        }
+        isOpen={
+          pageAction?.action === 'create' || pageAction?.action === 'edit'
+        }
+        office={pageAction?.action === 'edit' ? pageAction.office : undefined}
+        isSaving={isLoading}
+        onSave={save}
+        onClose={() => setPageAction(null)}
+      />
+      <OfficeDeletionDialog
+        isOpen={pageAction?.action === 'delete'}
+        office={pageAction?.action === 'delete' ? pageAction.office : undefined}
+        isDeleting={isLoading}
+        onConfirm={() => {
+          void confirmDelete();
+        }}
+        onClose={() => setPageAction(null)}
+      />
     </section>
   );
 }
