@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
 import { useAuth } from '@/auth/auth-context';
 import { DepartmentApi } from '@/features/departments/department.api';
@@ -6,6 +7,8 @@ import type {
   Department,
   SaveDepartmentRequest,
 } from '@/features/departments/department.types';
+
+const listKey = ['departments'] as const;
 
 interface DepartmentsViewModel {
   departments: Department[];
@@ -23,81 +26,89 @@ interface DepartmentsViewModel {
 export function useDepartmentsViewModel(): DepartmentsViewModel {
   const { api } = useAuth();
   const departmentApi = useMemo(() => new DepartmentApi(api), [api]);
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
+  const list = useQuery({
+    queryKey: listKey,
+    queryFn: async ({ signal }): Promise<Department[]> => {
+      return await departmentApi.getAll(signal);
+    },
+  });
 
-  const loadDepartments = useCallback((): Promise<void> => {
-    return departmentApi
-      .getAll()
-      .then(setDepartments)
-      .catch((error: unknown) => {
-        setLoadError(
-          error instanceof Error
-            ? error
-            : new Error('An unexpected error occurred.'),
-        );
-      })
-      .finally(() => setIsLoading(false));
-  }, [departmentApi]);
+  const creation = useMutation({
+    mutationFn: async (input: SaveDepartmentRequest): Promise<Department> => {
+      return await departmentApi.create(input);
+    },
+    onSuccess: async (created): Promise<void> => {
+      await queryClient.cancelQueries({ queryKey: listKey });
+      queryClient.setQueryData<Department[]>(listKey, (previous = []) => [
+        created,
+        ...previous.filter((item) => item.id !== created.id),
+      ]);
+    },
+  });
 
-  useEffect(() => {
-    void loadDepartments();
-  }, [loadDepartments]);
+  const update = useMutation({
+    mutationFn: async ({
+      id,
+      input,
+    }: {
+      id: string;
+      input: SaveDepartmentRequest;
+    }): Promise<Department> => {
+      return await departmentApi.update(id, input);
+    },
+    onSuccess: async (updated): Promise<void> => {
+      await queryClient.cancelQueries({ queryKey: listKey });
+      queryClient.setQueryData<Department[]>(listKey, (previous = []) =>
+        previous.map((item) => (item.id === updated.id ? updated : item)),
+      );
+    },
+  });
 
-  function refresh(): void {
-    setLoadError(null);
-    setIsLoading(true);
-    void loadDepartments();
-  }
+  const deletion = useMutation({
+    mutationFn: async (id: string): Promise<void> => {
+      await departmentApi.delete(id);
+    },
+    onSuccess: async (_result, id): Promise<void> => {
+      await queryClient.cancelQueries({ queryKey: listKey });
+      queryClient.setQueryData<Department[]>(listKey, (previous = []) =>
+        previous.filter((item) => item.id !== id),
+      );
+    },
+  });
 
   async function createDepartment(
     input: SaveDepartmentRequest,
   ): Promise<Department> {
-    setIsLoading(true);
-    try {
-      const created = await departmentApi.create(input);
-      setDepartments((previous) => [created, ...previous]);
-      return created;
-    } finally {
-      setIsLoading(false);
-    }
+    return await creation.mutateAsync(input);
   }
 
   async function updateDepartment(
     id: string,
     input: SaveDepartmentRequest,
   ): Promise<Department> {
-    setIsLoading(true);
-    try {
-      const updated = await departmentApi.update(id, input);
-      setDepartments((previous) =>
-        previous.map((department) =>
-          department.id === updated.id ? updated : department,
-        ),
-      );
-      return updated;
-    } finally {
-      setIsLoading(false);
-    }
+    return await update.mutateAsync({ id, input });
   }
 
   async function deleteDepartment(id: string): Promise<void> {
-    setIsLoading(true);
-    try {
-      await departmentApi.delete(id);
-      setDepartments((previous) =>
-        previous.filter((department) => department.id !== id),
-      );
-    } finally {
-      setIsLoading(false);
-    }
+    await deletion.mutateAsync(id);
   }
 
+  function refresh(): void {
+    void list.refetch({ throwOnError: false });
+  }
+
+  const isLoading =
+    list.isPending ||
+    list.isFetching ||
+    creation.isPending ||
+    update.isPending ||
+    deletion.isPending;
+
   return {
-    departments,
+    departments: list.data ?? [],
     isLoading,
-    loadError,
+    loadError: list.error,
     refresh,
     createDepartment,
     updateDepartment,

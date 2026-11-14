@@ -1,3 +1,4 @@
+import { isCancel } from 'axios';
 import type { AxiosInstance } from 'axios';
 
 import { toApiError } from '@/api/api-error';
@@ -18,11 +19,14 @@ export class DepartmentApi {
     this.api = api;
   }
 
-  public async getAll(): Promise<Department[]> {
+  public async getAll(signal: AbortSignal): Promise<Department[]> {
     try {
-      const { data } = await this.api.get<Department[]>('/departments');
+      const { data } = await this.api.get<Department[]>('/departments', {
+        signal,
+      });
       return data;
     } catch (error) {
+      if (isCancel(error)) throw error;
       throw toApiError(error, errorMessages);
     }
   }

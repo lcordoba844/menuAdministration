@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
 import { useAuth } from '@/auth/auth-context';
 import { OfficeApi } from '@/features/offices/office.api';
@@ -6,6 +7,8 @@ import type {
   Office,
   SaveOfficeRequest,
 } from '@/features/offices/office.types';
+
+const listKey = ['offices'] as const;
 
 interface OfficesViewModel {
   offices: Office[];
@@ -20,75 +23,87 @@ interface OfficesViewModel {
 export function useOfficesViewModel(): OfficesViewModel {
   const { api } = useAuth();
   const officeApi = useMemo(() => new OfficeApi(api), [api]);
-  const [offices, setOffices] = useState<Office[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
+  const list = useQuery({
+    queryKey: listKey,
+    queryFn: async ({ signal }): Promise<Office[]> => {
+      return await officeApi.getAll(signal);
+    },
+  });
 
-  const loadOffices = useCallback((): Promise<void> => {
-    return officeApi
-      .getAll()
-      .then(setOffices)
-      .catch((error: unknown) => {
-        setLoadError(
-          error instanceof Error
-            ? error
-            : new Error('An unexpected error occurred.'),
-        );
-      })
-      .finally(() => setIsLoading(false));
-  }, [officeApi]);
+  const creation = useMutation({
+    mutationFn: async (input: SaveOfficeRequest): Promise<Office> => {
+      return await officeApi.create(input);
+    },
+    onSuccess: async (created): Promise<void> => {
+      await queryClient.cancelQueries({ queryKey: listKey });
+      queryClient.setQueryData<Office[]>(listKey, (previous = []) => [
+        created,
+        ...previous.filter((item) => item.id !== created.id),
+      ]);
+    },
+  });
 
-  useEffect(() => {
-    void loadOffices();
-  }, [loadOffices]);
+  const update = useMutation({
+    mutationFn: async ({
+      id,
+      input,
+    }: {
+      id: string;
+      input: SaveOfficeRequest;
+    }): Promise<Office> => {
+      return await officeApi.update(id, input);
+    },
+    onSuccess: async (updated): Promise<void> => {
+      await queryClient.cancelQueries({ queryKey: listKey });
+      queryClient.setQueryData<Office[]>(listKey, (previous = []) =>
+        previous.map((item) => (item.id === updated.id ? updated : item)),
+      );
+    },
+  });
 
-  function refresh(): void {
-    setLoadError(null);
-    setIsLoading(true);
-    void loadOffices();
-  }
+  const deletion = useMutation({
+    mutationFn: async (id: string): Promise<void> => {
+      await officeApi.delete(id);
+    },
+    onSuccess: async (_result, id): Promise<void> => {
+      await queryClient.cancelQueries({ queryKey: listKey });
+      queryClient.setQueryData<Office[]>(listKey, (previous = []) =>
+        previous.filter((item) => item.id !== id),
+      );
+    },
+  });
 
   async function createOffice(input: SaveOfficeRequest): Promise<Office> {
-    setIsLoading(true);
-    try {
-      const created = await officeApi.create(input);
-      setOffices((previous) => [created, ...previous]);
-      return created;
-    } finally {
-      setIsLoading(false);
-    }
+    return await creation.mutateAsync(input);
   }
 
   async function updateOffice(
     id: string,
     input: SaveOfficeRequest,
   ): Promise<Office> {
-    setIsLoading(true);
-    try {
-      const updated = await officeApi.update(id, input);
-      setOffices((previous) =>
-        previous.map((office) => (office.id === updated.id ? updated : office)),
-      );
-      return updated;
-    } finally {
-      setIsLoading(false);
-    }
+    return await update.mutateAsync({ id, input });
   }
 
   async function deleteOffice(id: string): Promise<void> {
-    setIsLoading(true);
-    try {
-      await officeApi.delete(id);
-      setOffices((previous) => previous.filter((office) => office.id !== id));
-    } finally {
-      setIsLoading(false);
-    }
+    await deletion.mutateAsync(id);
   }
 
+  function refresh(): void {
+    void list.refetch({ throwOnError: false });
+  }
+
+  const isLoading =
+    list.isPending ||
+    list.isFetching ||
+    creation.isPending ||
+    update.isPending ||
+    deletion.isPending;
+
   return {
-    offices,
+    offices: list.data ?? [],
     isLoading,
-    loadError,
+    loadError: list.error,
     refresh,
     createOffice,
     updateOffice,

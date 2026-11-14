@@ -1,3 +1,4 @@
+import { isCancel } from 'axios';
 import type { AxiosInstance } from 'axios';
 
 import { toApiError } from '@/api/api-error';
@@ -18,11 +19,12 @@ export class OfficeApi {
     this.api = api;
   }
 
-  public async getAll(): Promise<Office[]> {
+  public async getAll(signal: AbortSignal): Promise<Office[]> {
     try {
-      const { data } = await this.api.get<Office[]>('/offices');
+      const { data } = await this.api.get<Office[]>('/offices', { signal });
       return data;
     } catch (error) {
+      if (isCancel(error)) throw error;
       throw toApiError(error, errorMessages);
     }
   }

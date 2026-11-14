@@ -8,6 +8,7 @@ import {
 import type { ReactElement, ReactNode } from 'react';
 
 import { configureAuth, createApiClient, publicApi } from '@/api/client';
+import { QueryProvider } from '@/api/QueryProvider';
 import { AuthContext } from '@/auth/auth-context';
 import {
   clearSession,
@@ -23,6 +24,7 @@ export function AuthProvider({
   children: ReactNode;
 }): ReactElement {
   const [session, setSession] = useState(readSession);
+  const [sessionGeneration, setSessionGeneration] = useState(0);
   const sessionRef = useRef(session);
   const revisionRef = useRef(0);
 
@@ -31,6 +33,7 @@ export function AuthProvider({
     sessionRef.current = next;
     revisionRef.current += 1;
     setSession(next);
+    setSessionGeneration((previous) => previous + 1);
   }, []);
 
   const syncSession = useCallback(() => {
@@ -115,7 +118,7 @@ export function AuthProvider({
         logout,
       }}
     >
-      {children}
+      <QueryProvider key={sessionGeneration}>{children}</QueryProvider>
     </AuthContext.Provider>
   );
 }

@@ -13,11 +13,11 @@ if (!root) throw new Error('Root element not found');
 createRoot(root).render(
   <StrictMode>
     <BrowserRouter>
-      <AuthProvider>
-        <SnackbarProvider>
+      <SnackbarProvider>
+        <AuthProvider>
           <App />
-        </SnackbarProvider>
-      </AuthProvider>
+        </AuthProvider>
+      </SnackbarProvider>
     </BrowserRouter>
   </StrictMode>,
 );
