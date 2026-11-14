@@ -12,6 +12,7 @@ Icon\r
 .env.test
 .env.production
 .env.local
+.env.backup.*
 
 # Build outputs and testing
 dist/

@@ -1,14 +1,31 @@
 import { config } from 'dotenv';
 
-config();
+const result = config({ quiet: true });
+
+function missingEnv(): never {
+  process.stderr.write('Missing env variables.');
+  process.exit(1);
+}
+
+if (result.error) {
+  missingEnv();
+}
+
+function required(name: string): string {
+  const value = process.env[name];
+  if (!value?.trim()) {
+    missingEnv();
+  }
+  return value;
+}
 
 export const environment = {
-  port: Number(process.env.PORT) || 3000,
-  frontendOrigin: process.env.FRONTEND_ORIGIN || 'http://localhost:5173',
-  nodeEnv: process.env.NODE_ENV || 'development',
-  databaseUrl: process.env.DATABASE_URL || '',
-  jwtSecret: process.env.JWT_SECRET || 'fallback-secret',
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '24h',
+  port: Number(required('PORT')),
+  frontendOrigin: required('FRONTEND_ORIGIN'),
+  nodeEnv: required('NODE_ENV'),
+  databaseUrl: required('DATABASE_URL'),
+  jwtSecret: required('JWT_SECRET'),
+  jwtExpiresIn: required('JWT_EXPIRES_IN'),
 };
 
 export const isDevelopment = (): boolean =>
